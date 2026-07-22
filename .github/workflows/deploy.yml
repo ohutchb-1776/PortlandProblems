@@ -25,25 +25,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build static site
-        run: npm run build
-        env:
-          # Serve the app under /<repo-name> on GitHub Pages
-          PAGES_BASE_PATH: /${{ github.event.repository.name }}
-
+      # The live site is the self-contained static front end in ./site
+      # (site/index.html). No build step needed.
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./out
+          path: ./site
 
   deploy:
     needs: build

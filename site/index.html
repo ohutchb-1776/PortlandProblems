@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1000">
+<title>Portland Problems — Portland, Maine Civic Guide</title>
+<meta name="description" content="A plain-language guide to getting things done in Portland, Maine: report issues, permits, meetings, and find your reps.">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+/* Portland Problems — 2010-era municipal site aesthetic.
+   No Tailwind. Fixed 960px width, Verdana body, Georgia titles, gradient blue
+   header, blue underlined links, gray gradient buttons, beige notice boxes. */
+
+body {
+  margin: 0;
+  padding: 0;
+  background: #e8e8e8 url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='4' height='4'><rect width='4' height='4' fill='%23e8e8e8'/><rect width='1' height='1' fill='%23dcdcdc'/></svg>") repeat;
+  color: #222;
+  font-family: Verdana, Geneva, Arial, sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+* { box-sizing: border-box; }
+
+a { color: #0055aa; text-decoration: underline; }
+a:hover { color: #cc0000; }
+a:visited { color: #663399; }
+
+h1, h2, h3, h4 { font-family: Georgia, "Times New Roman", serif; font-weight: bold; margin: 0; }
+
+img { border: 0; }
+
+/* -------- outer frame -------- */
+.site {
+  width: 960px;
+  margin: 0 auto;
+  background: #ffffff;
+  border-left: 1px solid #999;
+  border-right: 1px solid #999;
+  box-shadow: 0 0 8px rgba(0,0,0,0.15);
+  min-height: 100vh;
+}
+
+/* -------- top bar -------- */
+.topbar {
+  background: #003366;
+  color: #cfd8e6;
+  font-size: 10px;
+  padding: 3px 12px;
+  text-align: right;
+  border-bottom: 1px solid #001f3f;
+}
+.topbar a { color: #ffffff; text-decoration: none; margin-left: 12px; }
+.topbar a:hover { text-decoration: underline; }
+
+/* -------- masthead -------- */
+.masthead {
+  background: #1e4e8c;
+  background-image: linear-gradient(to bottom, #2a63a8 0%, #1e4e8c 55%, #163d70 100%);
+  color: #fff;
+  padding: 14px 20px;
+  border-bottom: 3px solid #f0b429;
+}
+.masthead-title {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 28px;
+  font-weight: bold;
+  color: #ffffff;
+  text-shadow: 1px 1px 0 #001f3f;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+}
+.masthead-title:hover { color: #ffe680; }
+.masthead-sub {
+  display: block;
+  font-family: Verdana, sans-serif;
+  font-size: 11px;
+  font-weight: normal;
+  color: #cfd8e6;
+  margin-top: 3px;
+  font-style: italic;
+}
+
+/* -------- tab nav -------- */
+.tabs {
+  background: #dfe6ee;
+  background-image: linear-gradient(to bottom, #f0f4f8, #cfd8e2);
+  border-bottom: 2px solid #1e4e8c;
+  padding: 0 10px;
+  height: 30px;
+}
+.tabs button {
+  display: inline-block;
+  margin: 4px 2px 0 0;
+  padding: 6px 14px 5px;
+  background: #eaeef3;
+  background-image: linear-gradient(to bottom, #f6f8fa, #d6dde5);
+  border: 1px solid #9aa5b1;
+  border-bottom: 0;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  color: #003366;
+  font-family: Verdana, sans-serif;
+  font-size: 11px;
+  font-weight: bold;
+  cursor: pointer;
+  text-decoration: none;
+}
+.tabs button:hover { background-image: linear-gradient(to bottom, #ffffff, #e2e8ef); }
+.tabs button.active {
+  background: #ffffff;
+  background-image: none;
+  color: #cc0000;
+  border-color: #1e4e8c;
+  position: relative;
+  top: 1px;
+  padding-bottom: 6px;
+}
+
+/* -------- breadcrumb -------- */
+.crumbs {
+  background: #f5f5ee;
+  border-bottom: 1px solid #d4d4c4;
+  padding: 4px 20px;
+  font-size: 10px;
+  color: #555;
+}
+.crumbs a { color: #0055aa; }
+
+/* -------- main content area -------- */
+.content {
+  padding: 18px 20px 30px;
+}
+.content h1 {
+  font-size: 22px;
+  color: #003366;
+  border-bottom: 1px solid #cfd8e2;
+  padding-bottom: 6px;
+  margin-bottom: 10px;
+}
+.content h2 {
+  font-size: 15px;
+  color: #003366;
+  margin-top: 4px;
+}
+.content p { margin: 0 0 10px; }
+.lede { font-size: 12px; color: #444; margin-bottom: 14px; }
+
+/* -------- two-column layout -------- */
+.two-col { display: table; width: 100%; }
+.two-col > .main { display: table-cell; vertical-align: top; padding-right: 18px; width: 660px; }
+.two-col > .side { display: table-cell; vertical-align: top; width: 240px; border-left: 1px dotted #bbb; padding-left: 14px; }
+
+.sidebox {
+  background: #f5f5ee;
+  border: 1px solid #d4d4c4;
+  padding: 8px 10px;
+  margin-bottom: 12px;
+  font-size: 11px;
+}
+.sidebox h3 {
+  font-family: Verdana, sans-serif;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #663300;
+  border-bottom: 1px solid #d4d4c4;
+  padding-bottom: 3px;
+  margin-bottom: 6px;
+  letter-spacing: 0.05em;
+}
+.sidebox ul { margin: 0; padding-left: 16px; }
+.sidebox li { margin-bottom: 3px; }
+
+/* -------- home index list -------- */
+.indexlist { width: 100%; border-collapse: collapse; margin-top: 8px; }
+.indexlist td {
+  border-bottom: 1px dotted #bbb;
+  padding: 10px 8px;
+  vertical-align: top;
+}
+.indexlist tr:hover td { background: #fffbe6; }
+.indexlist td.icon {
+  width: 28px;
+  color: #1e4e8c;
+  font-weight: bold;
+  font-size: 14px;
+  font-family: Georgia, serif;
+}
+.indexlist a.title {
+  font-family: Georgia, serif;
+  font-size: 14px;
+  font-weight: bold;
+  color: #0055aa;
+}
+.indexlist .desc { color: #444; font-size: 11px; margin-top: 2px; }
+
+/* -------- notice box -------- */
+.notice {
+  background: #fffbe6;
+  border: 1px solid #e0c07f;
+  color: #664400;
+  padding: 8px 12px;
+  margin: 10px 0;
+  font-size: 11px;
+}
+.notice strong { color: #663300; }
+
+.panel {
+  background: #f5f7f9;
+  border: 1px solid #cfd8e2;
+  padding: 6px 10px;
+  font-size: 11px;
+  margin: 8px 0;
+}
+
+/* -------- form fields -------- */
+input.field, .field {
+  border: 1px solid #888;
+  border-top-color: #555;
+  background: #fff;
+  padding: 5px 7px;
+  font-family: Verdana, sans-serif;
+  font-size: 12px;
+  color: #222;
+  width: 100%;
+}
+input.field:focus { outline: 1px solid #1e4e8c; }
+
+/* -------- buttons -------- */
+.btn {
+  display: inline-block;
+  padding: 4px 12px;
+  background: #e6e6e6;
+  background-image: linear-gradient(to bottom, #f7f7f7, #d0d0d0);
+  border: 1px solid #888;
+  border-radius: 3px;
+  color: #222;
+  font-family: Verdana, sans-serif;
+  font-size: 11px;
+  font-weight: bold;
+  text-decoration: none;
+  cursor: pointer;
+}
+.btn:hover { background-image: linear-gradient(to bottom, #ffffff, #dcdcdc); color: #000; }
+.btn:visited { color: #222; }
+.btn-primary {
+  background-image: linear-gradient(to bottom, #4a7cc7, #1e4e8c);
+  border-color: #163d70;
+  color: #fff;
+}
+.btn-primary:hover { background-image: linear-gradient(to bottom, #5b8ed6, #295ea0); color: #fff; }
+.btn-primary:visited { color: #fff; }
+.btn:disabled { opacity: 0.5; cursor: default; }
+
+/* -------- info table (used for services/tools/meetings) -------- */
+.itable { border: 1px solid #b7c0cc; border-collapse: collapse; width: 100%; margin: 10px 0; background: #fff; }
+.itable th, .itable td { border: 1px solid #d4dae2; padding: 6px 8px; text-align: left; vertical-align: top; font-size: 11px; }
+.itable th { background: #dfe6ee; background-image: linear-gradient(to bottom, #eaf0f6, #cfd8e2); color: #003366; font-family: Verdana, sans-serif; font-size: 11px; }
+.itable tr:nth-child(even) td { background: #f6f8fa; }
+
+/* -------- box (a bordered card, 2010-style) -------- */
+.box {
+  border: 1px solid #b7c0cc;
+  background: #fff;
+  margin: 10px 0;
+}
+.box-hd {
+  background: #dfe6ee;
+  background-image: linear-gradient(to bottom, #eaf0f6, #cfd8e2);
+  border-bottom: 1px solid #b7c0cc;
+  padding: 5px 10px;
+  font-family: Verdana, sans-serif;
+  font-size: 11px;
+  font-weight: bold;
+  color: #003366;
+}
+.box-bd { padding: 10px 12px; }
+
+/* -------- badges -------- */
+.badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border: 1px solid #999;
+  background: #f0f0f0;
+  font-size: 10px;
+  color: #333;
+  margin-left: 4px;
+}
+.badge-open { background: #d9ecd0; border-color: #7aa870; color: #24601a; }
+.badge-pending { background: #fbf3e0; border-color: #d4b060; color: #7a5510; }
+
+/* -------- chips (category filters) -------- */
+.chips { margin: 6px 0; }
+.chips button {
+  display: inline-block;
+  padding: 3px 9px;
+  margin: 0 3px 3px 0;
+  background: #f0f0f0;
+  background-image: linear-gradient(to bottom, #f8f8f8, #dcdcdc);
+  border: 1px solid #999;
+  border-radius: 2px;
+  font-family: Verdana, sans-serif;
+  font-size: 10px;
+  color: #333;
+  cursor: pointer;
+}
+.chips button.active { background: #003366; background-image: none; color: #fff; border-color: #001f3f; }
+
+/* -------- map -------- */
+.map-wrap { border: 1px solid #999; height: 360px; margin: 10px 0; background: #eee; }
+#map { width: 100%; height: 100%; }
+
+/* -------- checklist -------- */
+.check-list { list-style: none; padding-left: 0; margin: 6px 0; }
+.check-list li { padding-left: 18px; position: relative; margin-bottom: 4px; }
+.check-list li:before { content: "▪"; color: #1e4e8c; position: absolute; left: 4px; top: 0; }
+
+/* -------- footer -------- */
+.footer {
+  background: #f5f5ee;
+  border-top: 3px double #b7b7a4;
+  padding: 12px 20px;
+  font-size: 10px;
+  color: #555;
+  text-align: center;
+}
+.footer a { color: #0055aa; }
+
+/* -------- misc -------- */
+.small { font-size: 10px; color: #666; }
+.stack { margin-top: 10px; }
+.stack > * + * { margin-top: 8px; }
+.row { display: flex; gap: 6px; align-items: center; }
+.grow { flex: 1; }
+[hidden] { display: none !important; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+
+</style>
+</head>
+<body>
+<div class="site">
+  <div class="topbar">
+    <span>An independent civic guide · Portland, Maine</span>
+    <a href="https://www.portlandmaine.gov/" target="_blank" rel="noopener">portlandmaine.gov</a>
+    <a href="https://seeclickfix.com/portland_2/report" target="_blank" rel="noopener">Portland 311</a>
+  </div>
+  <div class="masthead">
+    <button class="masthead-title" onclick="go('home')">Portland Problems
+      <span class="masthead-sub">Get your Portland, Maine problem to the right place — fast.</span>
+    </button>
+  </div>
+  <div class="tabs" id="tabs"></div>
+  <div class="crumbs" id="crumbs"></div>
+  <div class="content" id="content"></div>
+  <div class="footer">
+    <p><strong>Not an official City of Portland website.</strong> Independent guide pointing to real city services. Always confirm details with the city.</p>
+    <p>Official site: <a href="https://www.portlandmaine.gov/" target="_blank" rel="noopener">portlandmaine.gov</a> · Report a problem: <a href="https://seeclickfix.com/portland_2/report" target="_blank" rel="noopener">Portland 311</a></p>
+    <p class="small">&copy; 2026 Portland Problems · Last updated July 22, 2026</p>
+  </div>
+</div>
+
+<script>
+const SERVICES = [
+  {"id":"pothole","keywords":["pothole","potholes","road damage","street hazard","sinkhole","damaged road","pavement"],"title":"Report a Pothole or Street Hazard","explanation":"Potholes and damaged roads are fixed by the Public Works patch crew. The fastest way to get one filled is to report it through Portland 311, which sends it straight to the crew and lets you track the fix.","department":"Public Works (via Portland 311)","actionLabel":"Report it on Portland 311","actionUrl":"https://seeclickfix.com/portland_2/report"},
+  {"id":"streetlight","keywords":["street light","streetlight","light out","graffiti","broken sign","damaged sign","vandalism"],"title":"Report a Broken Street Light, Sign, or Graffiti","explanation":"Burned-out street lights, damaged signs, and graffiti on public property are all handled by the city and routed to the right crew when you report them through Portland 311.","department":"Public Works (via Portland 311)","actionLabel":"Report it on Portland 311","actionUrl":"https://seeclickfix.com/portland_2/report"},
+  {"id":"tree","keywords":["tree","dead tree","fallen tree","branch","limb","street tree","city tree"],"title":"Report a Dead or Fallen Street Tree","explanation":"Trees in the public right-of-way (along streets and sidewalks) are maintained by the city. Report a dead, damaged, or fallen street tree through Portland 311 and it will be routed to the crew that handles city trees.","department":"Public Works (via Portland 311)","actionLabel":"Report the tree on Portland 311","actionUrl":"https://seeclickfix.com/portland_2/report"},
+  {"id":"snow","keywords":["snow","plow","plowing","unplowed","snow removal","sewer","stormwater","flooding","catch basin","drain"],"title":"Snow Plowing, Streets & Drainage","explanation":"Public Works maintains city streets and sidewalks, plows during winter storms, and manages sewers and storm drains. Their page has plow-route info, winter parking ban details, and contacts.","department":"Department of Public Works","actionLabel":"Public Works info & contacts","actionUrl":"https://www.portlandmaine.gov/public-works"},
+  {"id":"trash","keywords":["trash","garbage","recycling","recycle","collection","pickup","pay as you throw","purple bags","compost","yard waste","bulky item"],"title":"Trash & Recycling Collection","explanation":"Portland uses a Pay-As-You-Throw system for curbside trash, with weekly recycling collection run by Public Works. This page has your collection rules, what's recyclable, and where to buy official trash bags.","department":"Public Works — Solid Waste","actionLabel":"Trash & Recycling info","actionUrl":"https://www.portlandmaine.gov/trash-recycling"},
+  {"id":"bin","keywords":["trash bin","recycling bin","get a bin","new bin","cart","container","replacement bin","missing bin"],"title":"Get or Replace a Recycling Bin","explanation":"The city provides recycling bins for curbside collection. To request a new or replacement bin, or to ask about trash containers, start from the Trash & Recycling page for the current request process and contacts.","department":"Public Works — Solid Waste","actionLabel":"Request a bin (Trash & Recycling)","actionUrl":"https://www.portlandmaine.gov/trash-recycling"},
+  {"id":"parking","keywords":["parking","ticket","citation","parking permit","meter","parking ban","towed","tow","garage","residential permit"],"title":"Parking Tickets, Permits & Bans","explanation":"Pay or appeal a parking ticket, buy a residential parking permit, or check winter parking bans. Payments and permits are handled through the city's online parking customer portal.","department":"Parking Division","actionLabel":"Parking permits & payment portal","actionUrl":"https://portlandme.cmrpay.com/permits"},
+  {"id":"permit","keywords":["permit","building permit","deck permit","deck","fence","renovation","remodel","addition","electrical","plumbing","construction"],"title":"Building & Deck Permits","explanation":"Projects like a new deck, fence, addition, or major renovation usually need a permit. Portland's Permitting & Inspections Department runs a one-stop shop, and all applications are submitted online through the Citizen Self Service portal.","department":"Permitting & Inspections Department","actionLabel":"Apply via Citizen Self Service","actionUrl":"https://www.portlandmaine.gov/376/Citizen-Self-Service"},
+  {"id":"code","keywords":["without a permit","no permit","illegal construction","code violation","zoning","neighbor building","unpermitted","complaint"],"title":"Report Work Being Done Without a Permit","explanation":"If a neighbor is building or doing major work that may not be permitted, code enforcement falls under the Permitting & Inspections Department. Start from their page to file a complaint or ask whether a project is permitted.","department":"Permitting & Inspections — Code Enforcement","actionLabel":"Permitting & Inspections","actionUrl":"https://www.portlandmaine.gov/349/Permitting-Inspections"},
+  {"id":"tax","keywords":["property tax","taxes","tax bill","assessment","assessor","assessed value","pay taxes","abatement"],"title":"Property Taxes & Assessments","explanation":"Look up your property's assessed value, understand your tax bill, or pay property taxes online. The Assessor's Office handles valuations and the city's property tax page handles payments.","department":"Assessor's Office","actionLabel":"Property taxes & payment","actionUrl":"https://www.portlandmaine.gov/property-taxes"},
+  {"id":"records","keywords":["birth certificate","death certificate","marriage license","vital record","dog license","business license","city clerk","certified copy"],"title":"Birth, Death & Marriage Records; Licenses","explanation":"The City Clerk issues certified birth, death, and marriage records for events that occurred in Portland, and handles dog and business licenses. You can request most vital records online.","department":"City Clerk's Office","actionLabel":"Request a vital record","actionUrl":"https://www.portlandmaine.gov/169/Request-A-Vital-Record"},
+  {"id":"directory","keywords":["department","who handles","contact","phone number","city hall","office","directory","not sure"],"title":"Find the Right City Department","explanation":"Not sure who handles your issue? Browse the full directory of Portland city departments and services to find the right office and its contact information.","department":"City of Portland","actionLabel":"City department directory","actionUrl":"https://www.portlandmaine.gov/167/Departments"}
+];
+const TOOLS = [
+  {"name":"Maine Tool Library","category":"Borrow","whatItIs":"A lending library for tools instead of books — gardening, landscaping, home-improvement, and kitchen tools you can check out for a week.","whoItsFor":"DIY-ers, gardeners, and renters doing a one-off home project without buying tools.","cost":"Membership-based (sliding-scale subscription)","howToAccess":"Visit during open hours (Tue / Thu / Sat) at 224 Anderson St, or sign up online to become a member, then borrow tools on a weekly loan.","url":"https://portlandmainetoollibrary.org/","location":"224 Anderson St, Portland"},
+  {"name":"Library Museum & Park Passes","category":"Borrow","whatItIs":"Free passes the Portland Public Library lends out to museums, state parks, and cultural sites — the Portland Museum of Art, Coastal Maine Botanical Gardens, Maine State Parks, and more.","whoItsFor":"Families, students, and anyone wanting a free museum or park day.","cost":"Free with a library card","howToAccess":"Browse and reserve passes on the library's Museums & More page, or call (207) 871-1700, then pick up your pass or tickets.","url":"https://www.portlandlibrary.org/arts-culture/","location":"All PPL branches"},
+  {"name":"Library of Things","category":"Borrow","whatItIs":"Beyond books, the Portland Public Library lends everyday gear — mobile Wi-Fi hotspots, microscopes, and telescope / night-sky kits — with your library card.","whoItsFor":"Students, hobbyists, and travelers who need a gadget for a short time.","cost":"Free with a library card","howToAccess":"Browse the Library of Things in the catalog, place a hold on the item you want, and pick it up at your branch with your library card.","url":"https://ppl-dirigo.na5.iiivega.com/search?query=PPL%20Library%20of%20Things&searchType=everything&pageSize=10","location":"All PPL branches"},
+  {"name":"Public EV Charging Stations","category":"Get Around","whatItIs":"City-owned electric-vehicle chargers at downtown garages and lots — free to use while you're parked.","whoItsFor":"EV drivers parking downtown.","cost":"Free to charge; garage parking fees apply ($3–$5/hr)","howToAccess":"Drive up to a city charger (Elm, Spring, or Temple St garage, Payson Park, or City Hall) and plug in while parked.","url":"https://www.portlandmaine.gov/1620/Electric-Vehicles","location":"Downtown garages & city lots"},
+  {"name":"Community Gardens","category":"Outdoors","whatItIs":"Ten neighborhood garden sites the city runs with Cultivating Community, where residents can rent a plot to grow their own food.","whoItsFor":"Residents who want space to grow vegetables and flowers.","cost":"Low seasonal plot fee","howToAccess":"Apply for a plot through the city / Cultivating Community, and join the waitlist if your neighborhood garden is full.","url":"https://www.portlandmaine.gov/community-gardens","location":"10 gardens citywide"},
+  {"name":"Public Boat Launch","category":"Outdoors","whatItIs":"A public, all-tides boat ramp at East End Beach on the Eastern Promenade, for launching recreational boats and kayaks on Casco Bay.","whoItsFor":"Boaters, kayakers, and paddlers.","cost":"$5 day-use fee for trailered boats; free to hand-carry a kayak in","howToAccess":"Launch at East End Beach off the Eastern Promenade and pay the $5 day-use fee at the self-pay station if a ranger isn't present.","url":"https://portlandme.myrec.com/","location":"East End Beach, Eastern Promenade"},
+  {"name":"Bulky-Item Pickup","category":"Waste & Recycling","whatItIs":"Public Works curbside collection for large items that won't fit in a trash bag — furniture, appliances, mattresses, and most electronics.","whoItsFor":"Residents clearing out furniture, appliances, or electronics.","cost":"Free for items ≤30 lbs (limit 10/year); $40 per heavier item","howToAccess":"Apply for a Bulky Waste Permit online first, then set the items curbside on your scheduled collection day.","url":"https://www.portlandmaine.gov/534/Bulky-Waste-Collection-Permit","location":"Curbside, citywide"},
+  {"name":"Composting & Recycling","category":"Waste & Recycling","whatItIs":"The city's curbside recycling program plus guidance on what's accepted and how to keep food scraps and yard waste out of the trash.","whoItsFor":"All residents and households.","cost":"Free curbside recycling; Pay-As-You-Throw bags for trash","howToAccess":"Set recycling curbside on your collection day, and check the guide for accepted materials and composting options.","url":"https://www.portlandmaine.gov/trash-recycling","location":"Curbside, citywide"},
+  {"name":"Board & Commission Seats","category":"Get Involved","whatItIs":"Open volunteer seats on the city's boards and commissions — from historic preservation to the police review board — listed and applied for through OnBoardGOV.","whoItsFor":"Residents who want a real say in city decisions.","cost":"Free — volunteer civic service","howToAccess":"Browse open seats on OnBoardGOV and apply online; contact the City Clerk with questions.","url":"https://onboard.portlandmaine.gov/","location":"Online (citywide boards)"},
+  {"name":"Public Meeting Rooms","category":"Spaces","whatItIs":"Bookable rooms and study pods at the Portland Public Library that community groups and small teams can use.","whoItsFor":"Community groups, nonprofits, and study groups.","cost":"Free / low-cost (rental rates vary)","howToAccess":"See the Downtown Branch page for its meeting rooms, or call the library at (207) 871-1700 to ask about reserving a room or study pod.","url":"https://www.portlandlibrary.org/downtown-branch/","location":"5 Monument Square (Downtown)"}
+];
+const PERMIT_PROJECTS = [
+  {"id":"fence","label":"Fence","level":"maybe","verdict":"Usually no building permit — but zoning rules apply","summary":"A compliant fence generally doesn't need a building permit, but height and placement are limited by zoning.","details":"In most residential zones you can put up a fence without a building permit as long as it meets the zoning code — typically a maximum height (often around 6–7 ft in side and rear yards, and lower in front yards) while staying inside your property lines. There's no plan review or inspection for a compliant fence. But if your property is in a historic district, a shoreland zone, or an overlay district, extra review or a zoning permit can apply. When in doubt, a quick call or email to Permitting & Inspections confirms your allowed height and setbacks before you dig post holes.","checklist":["Confirm your zone's maximum fence height (commonly up to about 6–7 ft)","Keep the fence inside your property lines and required setbacks","Front-yard fences are often limited to a lower height","Check whether you're in a historic, shoreland, or overlay district","Call Permitting & Inspections if you're unsure before you build"],"timeline":"No permit needed if compliant; a quick zoning question is usually answered the same week.","note":"Height and setback limits vary by zone — verify yours with the city."},
+  {"id":"deck","label":"Deck","level":"yes","verdict":"You'll likely need a building permit","summary":"Most decks need a building permit — especially attached decks or any deck more than 30 inches above grade.","details":"A building permit is required for most decks, and the review focuses on structure and safety. You'll submit a site plan showing the deck's footprint and its distance to property lines, plus construction drawings covering footings and piers, beam and joist sizing, how the deck attaches to the house (the ledger), guardrails, and stairs. Once the permit is issued you build to the approved plans and call for inspections at key stages — typically footings before concrete is poured, framing before you lay the decking, and a final inspection. Permit fees are based on the project's value, and attached decks or anything over 30 inches above grade get the closest review.","checklist":["Site plan showing the deck size and distance from property lines","Construction drawings: footings/piers, framing, ledger attachment, railings, and stairs","Note the height above grade — over 30 inches usually requires guardrails","Apply for a building permit in Citizen Self Service and pay the fee","Schedule inspections (footings, framing, and final)"],"timeline":"Roughly 2–4 weeks for review, depending on how complete your application is.","note":"Ground-level, freestanding platforms may be exempt — confirm with Permitting."},
+  {"id":"shed","label":"Shed","level":"maybe","verdict":"Small sheds often skip the building permit","summary":"Small one-story sheds are frequently exempt from a building permit, but still must meet zoning setbacks.","details":"Whether you need a permit comes down to size and use. Small, one-story, non-habitable accessory structures (roughly under ~200 sq ft on a typical lot) are usually exempt from a building permit — but they still have to meet zoning setbacks from property lines and other structures, and count toward your lot-coverage limit. Anything larger or taller, built on a permanent foundation, or that will have electricity or plumbing crosses into permit territory and needs a plan review. Even for an exempt shed, confirm your setbacks first so you don't have to relocate it later.","checklist":["Check the size — small one-story sheds (roughly under ~200 sq ft) are often exempt","Confirm setbacks from your property lines and lot-coverage limits","Larger, taller, foundation-set, or wired/plumbed structures need a permit","Verify your exact size and zone with Permitting before building"],"timeline":"No permit if exempt; otherwise about 1–3 weeks for a small accessory structure.","note":"The exact size threshold depends on your lot and zone — confirm with the city."},
+  {"id":"sign","label":"Sign","level":"yes","verdict":"Most permanent signs need a sign permit","summary":"Permanent business and property signs generally require a sign permit, with extra review in historic districts.","details":"Most permanent signs — wall signs, projecting signs, and freestanding signs — need a sign permit. The review looks at the sign's size, placement, height, illumination, and how it attaches to the building, and the total sign area has to fit within what your zone allows for that property. You'll provide a scaled drawing or a photo showing the dimensions and exact location. Historic districts and some corridors add design standards and a separate review step. Certain temporary or very small signs can be exempt, but permanent business signage almost always requires a permit.","checklist":["Prepare a scaled drawing or photo with the sign's dimensions and location","Note how it's mounted and whether it's illuminated","Confirm your zone's total allowed sign area and placement rules","If you're in a historic district, plan for additional design review","Apply for a sign permit in Citizen Self Service"],"timeline":"About 1–3 weeks; longer if your property is in a historic district."},
+  {"id":"short-term-rental","label":"Short-term rental","level":"yes","verdict":"Yes — Portland requires yearly STR registration","summary":"Every short-term rental unit must be registered with the city each year, with a fire-safety inspection and your registration number shown in listings.","details":"Portland regulates short-term rentals (stays under 30 days) through an annual registration rather than a building permit. Each unit must be registered with the city, pass a fire-safety inspection, and display its registration number on every listing. Registration is tied to a classification — owner-occupied, tenant-occupied, or non-owner-occupied — and the city caps the number of non-owner-occupied mainland units, so new licenses in that category may simply be unavailable. You renew every year by January 1, and you're responsible for collecting and remitting state and local lodging taxes.","checklist":["Register the unit with the city and pay the annual fee","Pass a fire-safety inspection (about $100 for new applications)","Confirm your classification (owner-occupied vs. non-owner-occupied) and any caps","Display your registration number in every listing (Airbnb, VRBO, etc.)","Renew by January 1 each year and remit lodging taxes"],"timeline":"Plan for a few weeks, including scheduling the fire-safety inspection.","note":"This is a registration/licensing process, not a building permit."},
+  {"id":"food-truck","label":"Food truck","level":"yes","verdict":"Yes — you'll need city and state licensing","summary":"Mobile food vending needs both a city vending permit and a state health license, plus a passing health inspection.","details":"Operating a food truck takes approvals from two levels of government. The State of Maine (through DACF / DHHS) issues the Mobile Food Service license and inspects the unit for sanitation, water supply, waste handling, and fire suppression. The City of Portland then issues the mobile vending permit that lets you operate here and governs where and when you can vend. On top of that you'll need the usual business basics — business registration, insurance, and any commissary agreement or fire-department sign-off. Budget several weeks, since the state and city steps run somewhat independently.","checklist":["Get a State Mobile Food Service license (Maine DACF / DHHS) and pass the health inspection","Get a city mobile vending permit through Portland Permitting","Meet equipment rules (hand sink, water tanks, fire suppression)","Line up business registration, insurance, and any commissary agreement","Confirm exactly where and when you're allowed to vend"],"timeline":"Several weeks — state licensing plus city permitting run in parallel.","note":"This involves state agencies in addition to the city."},
+  {"id":"interior-reno","label":"Interior reno","level":"maybe","verdict":"Depends on what you're changing","summary":"Cosmetic updates are usually fine without a permit; structural, electrical, or plumbing changes need one.","details":"Whether you need a permit depends entirely on what you're touching. Purely cosmetic work — paint, flooring, trim, cabinets, or swapping fixtures like-for-like — generally needs no permit. But the moment you affect structure (removing or moving a wall, altering the roof, changing a window or door opening) or the electrical, plumbing, or mechanical systems, a permit for that trade is required, and structural work needs drawings. Changes that affect egress, fire separation, or how the space is used get extra scrutiny. A project that mixes several trades may need more than one permit, and inspections happen before you close the walls back up.","checklist":["Paint, flooring, trim, cabinets, like-for-like fixtures: usually no permit","Moving walls, structural changes, or new/enlarged window and door openings: building permit","New or altered wiring: electrical permit","New or moved plumbing: plumbing permit","Apply for the relevant permit(s) in Citizen Self Service before closing up walls"],"timeline":"Simple trade permits about 1–2 weeks; structural review 2–4 weeks."}
+];
+const MEETINGS = [
+  {"id":"council","body":"City Council","type":"Regular Meeting","dateTime":"2026-07-27T17:00:00-04:00","location":"Council Chambers, City Hall, 389 Congress St","whatItIs":"The full nine-member City Council meets to debate and vote on ordinances, the budget, contracts, and appointments.","whyItMatters":"This is where local laws and city spending are actually decided — the final say on most citywide policy.","howToComment":"Speak in person during public comment, or email publiccomment@portlandmaine.gov with your name, legal address, and the agenda order number.","commentDeadline":"Written comments by 12:00 PM on the day of the meeting.","agendaUrl":"https://portlandme.portal.civicclerk.com/"},
+  {"id":"finance","body":"Finance Committee","type":"Committee Meeting","dateTime":"2026-07-30T17:00:00-04:00","location":"Room 209, City Hall, 389 Congress St","whatItIs":"A council subcommittee that reviews city spending, contracts, and budget items before they reach the full Council.","whyItMatters":"Big financial decisions get shaped here first — it's an early point to weigh in before a full-Council vote.","howToComment":"Email publiccomment@portlandmaine.gov, or sign up to speak at the meeting.","commentDeadline":"Written comments by 12:00 PM the day of the meeting.","agendaUrl":"https://portlandme.portal.civicclerk.com/"},
+  {"id":"planning","body":"Planning Board","type":"Public Hearing","dateTime":"2026-08-04T16:30:00-04:00","location":"Council Chambers, City Hall, 389 Congress St","whatItIs":"Reviews development proposals, site plans, and subdivisions, and holds public hearings on new projects.","whyItMatters":"Decides what actually gets built in your neighborhood — height, density, parking, and design.","howToComment":"Testify at the public hearing, or send written comments to the planning staff before the meeting.","commentDeadline":"Written comments at least 24 hours before the hearing.","agendaUrl":"https://portlandme.portal.civicclerk.com/"},
+  {"id":"hp","body":"Historic Preservation Board","type":"Regular Meeting","dateTime":"2026-08-05T17:00:00-04:00","location":"Room 209, City Hall, 389 Congress St","whatItIs":"Reviews exterior changes, demolitions, and new construction in the city's historic districts.","whyItMatters":"Shapes what buildings in historic neighborhoods can look like — relevant if you own or live near a landmark property.","howToComment":"Speak at the meeting or submit written comments to preservation staff beforehand.","commentDeadline":"Written comments at least 24 hours before the meeting.","agendaUrl":"https://portlandme.portal.civicclerk.com/"},
+  {"id":"school","body":"Board of Public Education","type":"Regular Meeting","dateTime":"2026-08-11T18:00:00-04:00","location":"Casco Bay High School, 196 Allen Ave","whatItIs":"The elected school board sets policy and the budget for Portland Public Schools.","whyItMatters":"Decisions on school budgets, staffing, and programs that affect students and families across the district.","howToComment":"Sign up for public comment at the meeting, or email the board through the district office.","commentDeadline":"Sign up before the public comment period opens at the meeting.","agendaUrl":"https://portlandme.portal.civicclerk.com/"},
+  {"id":"hed","body":"Housing & Economic Development Committee","type":"Committee Meeting","dateTime":"2026-08-12T17:00:00-04:00","location":"Room 209, City Hall, 389 Congress St","whatItIs":"A council subcommittee focused on housing policy, development incentives, and economic programs.","whyItMatters":"Where housing and development policy is drafted before the full Council votes — key for renters and homeowners alike.","howToComment":"Email publiccomment@portlandmaine.gov, or sign up to speak at the meeting.","commentDeadline":"Written comments by 12:00 PM the day of the meeting.","agendaUrl":"https://portlandme.portal.civicclerk.com/"}
+];
+const ISSUES = [
+  {"id":90000001,"status":"Open","type":"Pothole","description":"Deep pothole in the eastbound lane near the crosswalk, been getting worse after the rain.","address":"512 Congress St, Portland, ME 04101","lat":43.65695,"lng":-70.25935,"createdAt":"2026-07-21T08:12:00-04:00","url":"https://seeclickfix.com/issues/90000001"},
+  {"id":90000002,"status":"Acknowledged","type":"Street Light","description":"Street light has been out for over a week, whole corner is dark at night.","address":"78 Washington Ave, Portland, ME 04101","lat":43.67285,"lng":-70.25520,"createdAt":"2026-07-20T21:40:00-04:00","url":"https://seeclickfix.com/issues/90000002"},
+  {"id":90000003,"status":"Open","type":"Graffiti","description":"Graffiti on the side of the utility box at the bus stop.","address":"20 Monument Sq, Portland, ME 04101","lat":43.65640,"lng":-70.25755,"createdAt":"2026-07-20T14:05:00-04:00","url":"https://seeclickfix.com/issues/90000003"},
+  {"id":90000004,"status":"Open","type":"Illegal Dumping","description":"Someone left a couch and several trash bags on the curb, not a pickup day.","address":"155 St John St, Portland, ME 04102","lat":43.65565,"lng":-70.28190,"createdAt":"2026-07-19T17:22:00-04:00","url":"https://seeclickfix.com/issues/90000004"},
+  {"id":90000005,"status":"Acknowledged","type":"Traffic Sign","description":"Stop sign is bent and hard to see coming down the hill.","address":"The Eastern Promenade, Portland, ME 04101","lat":43.66575,"lng":-70.24430,"createdAt":"2026-07-19T09:15:00-04:00","url":"https://seeclickfix.com/issues/90000005"},
+  {"id":90000006,"status":"Open","type":"Sidewalk","description":"Sidewalk slab is heaved up several inches, tripping hazard for the school route.","address":"340 Forest Ave, Portland, ME 04101","lat":43.67130,"lng":-70.27540,"createdAt":"2026-07-18T12:48:00-04:00","url":"https://seeclickfix.com/issues/90000006"},
+  {"id":90000007,"status":"Open","type":"Tree","description":"Large limb down blocking half the sidewalk after last night's wind.","address":"88 Deering Ave, Portland, ME 04102","lat":43.66480,"lng":-70.28090,"createdAt":"2026-07-18T07:03:00-04:00","url":"https://seeclickfix.com/issues/90000007"},
+  {"id":90000008,"status":"Acknowledged","type":"Storm Drain","description":"Storm drain is blocked with leaves and debris, water pooling across the road.","address":"410 Commercial St, Portland, ME 04101","lat":43.65370,"lng":-70.25060,"createdAt":"2026-07-17T15:31:00-04:00","url":"https://seeclickfix.com/issues/90000008"}
+];
+const PERMITS_PORTAL_URL = "https://selfservice.portlandmaine.gov/EnerGov_Prod/SelfService#/home";
+const OFFICIAL_CALENDAR_URL = "https://portlandme.portal.civicclerk.com/";
+const COUNCIL_URL = "https://www.portlandmaine.gov/723/City-Council";
+const HOUSE_URL = "https://legislature.maine.gov/house/house/MemberProfiles/ListDistrict";
+const SENATE_URL = "https://legislature.maine.gov/senate-home-page/find-your-state-senator";
+const GIS = "https://gis.portlandmaine.gov/maps/rest/services";
+
+const SECTIONS = [
+  {id:"home",label:"Home"},{id:"ask",label:"Ask & Route"},{id:"tools",label:"Public Tools"},
+  {id:"report",label:"Report an Issue"},{id:"permits",label:"Permits"},
+  {id:"meetings",label:"Meetings"},{id:"reps",label:"Your Reps"}
+];
+const LABEL = Object.fromEntries(SECTIONS.map(s=>[s.id,s.label]));
+const esc = s => String(s??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+let section = "home";
+let permitPick = null;
+let toolCat = "All";
+let toolQ = "";
+let askQ = "";
+
+function go(s){ location.hash = s==="home"?"":s; window.scrollTo(0,0); }
+
+function renderTabs(){
+  document.getElementById("tabs").innerHTML = SECTIONS.filter(s=>s.id!=="home").map(s=>
+    `<button class="${section===s.id?"active":""}" onclick="go('${s.id}')">${s.label}</button>`).join("");
+  document.getElementById("crumbs").innerHTML =
+    `<a href="#" onclick="event.preventDefault();go('home')">Home</a>` +
+    (section!=="home"?` &raquo; ${LABEL[section]}`:"");
+}
+
+const HOME_ITEMS = [
+  ["ask","Ask & Route","Describe your problem in plain words and get sent to the exact city service that handles it."],
+  ["tools","Public Tools","Free and low-cost resources most residents don't know exist — things to borrow, places to go."],
+  ["report","Report an Issue","See what neighbors have reported to 311 on a map, and report a pothole, light, or hazard."],
+  ["permits","Permits","\"Do I even need a permit?\" — a plain-language read on your project, plus where to apply."],
+  ["meetings","Meetings","Upcoming City Council and board meetings explained, with how and when to submit public comment."],
+  ["reps","Your Reps","Type your address to find your council district, state legislators, and trash day."]
+];
+
+function homeView(){
+  return `<div class="two-col"><div class="main">
+    <h1>Welcome</h1>
+    <p class="lede">Portland Problems is a plain-language guide to getting things done in Portland, Maine. No jargon, no dead ends — just your problem, who handles it, and the direct link to fix it.</p>
+    <table class="indexlist"><tbody>${HOME_ITEMS.map(([id,t,d])=>
+      `<tr><td class="icon">&raquo;</td><td><a class="title" href="#${id}" onclick="event.preventDefault();go('${id}')">${t}</a><div class="desc">${d}</div></td></tr>`).join("")}
+    </tbody></table></div>
+    <div class="side">
+      <div class="sidebox"><h3>Announcements</h3><ul><li>Winter parking ban runs Nov 1 – Apr 15.</li><li>City Council meets Mon, Jul 27 at 5 PM.</li><li>Bulky-item pickup permits available online.</li></ul></div>
+      <div class="sidebox"><h3>Quick Links</h3><ul>
+        <li><a href="https://seeclickfix.com/portland_2/report" target="_blank" rel="noopener">Report a Pothole</a></li>
+        <li><a href="https://portlandme.cmrpay.com/permits" target="_blank" rel="noopener">Pay a Parking Ticket</a></li>
+        <li><a href="https://www.portlandmaine.gov/trash-recycling" target="_blank" rel="noopener">Trash &amp; Recycling</a></li>
+        <li><a href="https://www.portlandmaine.gov/376/Citizen-Self-Service" target="_blank" rel="noopener">Permit Portal</a></li></ul></div>
+      <div class="sidebox"><h3>Contact City Hall</h3><ul><li>389 Congress Street</li><li>Portland, ME 04101</li><li>(207) 874-8300</li></ul></div>
+    </div></div>`;
+}
+
+const STOP = {the:1,a:1,an:1,and:1,or:1,of:1,to:1,in:1,on:1,my:1,is:1,for:1,how:1,do:1,i:1,get:1,with:1,there:1,s:1};
+function tokenize(q){return (q.toLowerCase().match(/[a-z0-9]+/g)||[]).filter(t=>t.length>2&&!STOP[t]);}
+function routeQuery(q){
+  const toks=tokenize(q); if(!toks.length) return [];
+  return SERVICES.map(s=>{
+    const kws=s.keywords.map(k=>k.toLowerCase());
+    const hay=(s.title+" "+s.explanation+" "+s.department).toLowerCase();
+    let score=0;
+    toks.forEach(t=>{
+      const hit=kws.some(k=>k===t||(t.length>=4&&k.indexOf(t)>=0));
+      if(hit) score+=3; else if(new RegExp("\\b"+t+"\\b").test(hay)) score+=1;
+    });
+    return {s,score};
+  }).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,3).map(x=>x.s);
+}
+const EXAMPLES=["There's a dead tree on my street","My neighbor is building without a permit","How do I get a trash bin?","Pay a parking ticket","Deck permit"];
+
+function serviceBox(s){
+  return `<div class="box"><div class="box-hd">${esc(s.title)}</div><div class="box-bd">
+    <p>${esc(s.explanation)}</p><p class="small"><strong>Handled by:</strong> ${esc(s.department)}</p>
+    <a class="btn btn-primary" href="${s.actionUrl}" target="_blank" rel="noopener">${esc(s.actionLabel)} &raquo;</a></div></div>`;
+}
+function askView(){
+  const results = routeQuery(askQ);
+  let body="";
+  if(!askQ.trim()){
+    body = `<div class="stack"><p class="small" style="margin-top:12px"><strong>Try one of these:</strong></p>
+      <div class="chips">${EXAMPLES.map(e=>`<button onclick="askQ=${JSON.stringify(e)};render()">${esc(e)}</button>`).join("")}</div></div>`;
+  } else if(!results.length){
+    body = `<div class="box"><div class="box-hd">Not sure yet — here's where to start</div><div class="box-bd">
+      <p>We couldn't match that. To report a neighborhood problem, use Portland 311. Otherwise, browse city departments.</p>
+      <p><a class="btn btn-primary" href="https://seeclickfix.com/portland_2/report" target="_blank" rel="noopener">Report on 311 &raquo;</a>
+      <a href="https://www.portlandmaine.gov/167/Departments" target="_blank" rel="noopener">Browse all departments</a></p></div></div>`;
+  } else {
+    body = `<div class="stack" style="margin-top:10px"><p class="small"><strong>${results.length===1?"Here's who handles that:":"This looks like:"}</strong></p>${results.map(serviceBox).join("")}</div>`;
+  }
+  return `<h1>What do you need?</h1><p class="lede">Describe your problem in plain words. We'll explain it, name the city department that handles it, and give you the exact next step.</p>
+    <input class="field" id="askQ" type="text" placeholder="e.g. there's a pothole on my street" value="${esc(askQ)}" oninput="askQ=this.value;render(true)">${body}`;
+}
+
+function toolsView(){
+  const cats=["All"]; TOOLS.forEach(t=>{if(!cats.includes(t.category))cats.push(t.category);});
+  const qq=toolQ.trim().toLowerCase();
+  const filtered = TOOLS.filter(t=>(toolCat==="All"||t.category===toolCat)&&(!qq||t.name.toLowerCase().includes(qq)||t.whatItIs.toLowerCase().includes(qq)));
+  return `<h1>Public Tools You Can Use</h1><p class="lede">Free and low-cost public resources most residents don't know exist.</p>
+    <input class="field" id="toolQ" type="search" placeholder="Search (e.g. tools, passes, gardens)" value="${esc(toolQ)}" oninput="toolQ=this.value;render(true)">
+    <div class="chips" style="margin-top:8px">${cats.map(c=>`<button class="${c===toolCat?'active':''}" onclick="toolCat=${JSON.stringify(c)};render()">${esc(c)}</button>`).join("")}</div>
+    <p class="small">${filtered.length} ${filtered.length===1?'resource':'resources'}</p>
+    <table class="itable"><thead><tr><th style="width:180px">Resource</th><th style="width:90px">Category</th><th>What it is</th><th style="width:130px">Cost</th><th style="width:90px">&nbsp;</th></tr></thead>
+    <tbody>${filtered.length===0?'<tr><td colspan="5"><em>No public tools match that.</em></td></tr>':
+      filtered.map(t=>`<tr><td><strong>${esc(t.name)}</strong><div class="small">${esc(t.location)}</div></td>
+        <td>${esc(t.category)}</td>
+        <td>${esc(t.whatItIs)}<div class="small" style="margin-top:4px"><strong>Who:</strong> ${esc(t.whoItsFor)}</div><div class="small"><strong>How:</strong> ${esc(t.howToAccess)}</div></td>
+        <td>${esc(t.cost)}</td><td><a class="btn" href="${t.url}" target="_blank" rel="noopener">How to access &raquo;</a></td></tr>`).join("")}
+    </tbody></table>`;
+}
+
+function timeAgo(iso){const m=Math.round((Date.now()-new Date(iso))/60000);if(m<60)return m+"m ago";const h=Math.round(m/60);if(h<24)return h+"h ago";return Math.round(h/24)+"d ago";}
+function reportView(){
+  return `<h1>Report &amp; Track Issues</h1><p class="lede">See what neighbors have recently reported to 311, and report something new.</p>
+    <p><a class="btn btn-primary" href="https://seeclickfix.com/portland_2/report" target="_blank" rel="noopener">Report a New Issue &raquo;</a></p>
+    <div class="notice"><strong>Showing sample data.</strong> Mock entries; SeeClickFix's API blocks browser requests without a server proxy.</div>
+    <div class="map-wrap"><div id="map"></div></div>
+    <h2 style="margin-top:14px">${ISSUES.length} recent open issues</h2>
+    <table class="itable"><thead><tr><th style="width:110px">Type</th><th style="width:90px">Status</th><th>Description</th><th style="width:200px">Location</th><th style="width:80px">When</th><th style="width:60px">&nbsp;</th></tr></thead>
+    <tbody>${ISSUES.map(i=>`<tr><td><strong>${esc(i.type)}</strong></td>
+      <td><span class="badge ${i.status.toLowerCase()==='open'?'badge-open':'badge-pending'}">${esc(i.status)}</span></td>
+      <td>${esc(i.description)}</td><td>${esc(i.address)}</td><td class="small">${timeAgo(i.createdAt)}</td>
+      <td><a href="${i.url}" target="_blank" rel="noopener">View</a></td></tr>`).join("")}</tbody></table>`;
+}
+function initMap(){
+  const el=document.getElementById("map"); if(!el||!window.L) return;
+  const map=L.map(el,{scrollWheelZoom:false}).setView([43.6591,-70.2568],13);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
+  ISSUES.forEach(i=>L.marker([i.lat,i.lng]).addTo(map).bindPopup(`<strong>${esc(i.type)}</strong><br>${esc(i.status)}<br>${esc(i.address)}<br><a href="${i.url}" target="_blank" rel="noopener">View on SeeClickFix &raquo;</a>`));
+  setTimeout(()=>map.invalidateSize(),200);
+}
+
+function permitsView(){
+  if(!permitPick){
+    return `<h1>Do I Even Need a Permit?</h1><p class="lede">Pick what you're planning for a plain-language read on whether a permit is likely, what to prepare, and where to apply.</p>
+      <div class="notice"><strong>Guidance, not an official determination.</strong> Only the City of Portland Permitting &amp; Inspections Department can confirm.</div>
+      <p class="small"><strong>What are you planning?</strong></p>
+      <table class="itable"><tbody>${PERMIT_PROJECTS.map(p=>`<tr><td style="width:160px"><a href="#" onclick="event.preventDefault();permitPick=${JSON.stringify(p.id)};render()"><strong>${esc(p.label)}</strong></a></td><td>${esc(p.summary)}</td></tr>`).join("")}</tbody></table>`;
+  }
+  const p=PERMIT_PROJECTS.find(x=>x.id===permitPick);
+  return `<h1>Do I Even Need a Permit?</h1>
+    <p><a href="#" onclick="event.preventDefault();permitPick=null;render()">&laquo; Choose a different project</a></p>
+    <div class="box"><div class="box-hd">${esc(p.label)} <span class="badge ${p.level==='yes'?'badge-pending':''}">${p.level==='yes'?'Permit likely':'It depends'}</span></div>
+    <div class="box-bd"><p><strong>${esc(p.verdict)}</strong></p><p>${esc(p.summary)}</p>
+    <h3 style="font-size:12px;font-family:Verdana,sans-serif;text-transform:uppercase;color:#663300;margin-top:12px">What's involved</h3><p>${esc(p.details)}</p>
+    <h3 style="font-size:12px;font-family:Verdana,sans-serif;text-transform:uppercase;color:#663300;margin-top:12px">Checklist</h3>
+    <ul class="check-list">${p.checklist.map(c=>`<li>${esc(c)}</li>`).join("")}</ul>
+    <div class="panel"><strong>Rough timeline:</strong> ${esc(p.timeline)}</div>
+    ${p.note?`<p class="small"><em>${esc(p.note)}</em></p>`:""}
+    <p><a class="btn btn-primary" href="${PERMITS_PORTAL_URL}" target="_blank" rel="noopener">Start in Citizen Self Service &raquo;</a></p></div></div>`;
+}
+
+function fmtDate(iso){return new Date(iso).toLocaleString("en-US",{weekday:"short",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});}
+function meetingsView(){
+  const s=[...MEETINGS].sort((a,b)=>new Date(a.dateTime)-new Date(b.dateTime));
+  return `<h1>City Meetings, in Plain English</h1><p class="lede">What's coming up at City Council and its boards — what each meeting is, why it matters, and how to have your say.</p>
+    <div class="notice"><strong>Sample schedule.</strong> Confirm on the <a href="${OFFICIAL_CALENDAR_URL}" target="_blank" rel="noopener">official meetings portal</a>.</div>
+    <div class="stack">${s.map(m=>`<div class="box"><div class="box-hd">${esc(m.body)} <span class="badge">${esc(m.type)}</span></div>
+      <div class="box-bd"><p class="small"><strong>${fmtDate(m.dateTime)}</strong> · ${esc(m.location)}</p>
+      <p>${esc(m.whatItIs)}</p><p class="small"><strong>Why it matters:</strong> ${esc(m.whyItMatters)}</p>
+      <div class="panel"><p><strong>Have your say:</strong> ${esc(m.howToComment)}</p><p class="small"><strong>Deadline:</strong> ${esc(m.commentDeadline)}</p></div>
+      <p><a href="${m.agendaUrl}" target="_blank" rel="noopener">View the agenda &raquo;</a></p></div></div>`).join("")}</div>`;
+}
+
+async function pointField(layer,lon,lat,field){
+  try{
+    const url=`${layer}/query?geometry=${lon},${lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=${field}&returnGeometry=false&f=json`;
+    const r=await fetch(url); const d=await r.json();
+    const v=d?.features?.[0]?.attributes?.[field]; return v==null?null:String(v).trim();
+  }catch{return null;}
+}
+async function lookupReps(e){
+  e.preventDefault();
+  const addr=document.getElementById("repAddr").value.trim(); if(!addr) return;
+  const out=document.getElementById("repOut"); out.innerHTML='<p class="small">Looking up…</p>';
+  try{
+    const q=/portland/i.test(addr)?addr:addr+", Portland, ME";
+    const geo=await (await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&q="+encodeURIComponent(q))).json();
+    if(!geo?.length) throw new Error("We couldn't find that address. Try more detail, e.g. '123 Congress St, Portland, ME'.");
+    const lat=parseFloat(geo[0].lat), lon=parseFloat(geo[0].lon), matched=geo[0].display_name;
+    const [council,house,senate,trash]=await Promise.all([
+      pointField(GIS+"/Political/Council_Districts/FeatureServer/112",lon,lat,"NAME"),
+      pointField(GIS+"/Political/State_House_Districts/FeatureServer/6",lon,lat,"DISTRICT"),
+      pointField(GIS+"/Political/State_Senate_Districts/FeatureServer/8",lon,lat,"DISTRICT"),
+      pointField(GIS+"/City_of_Portland_Trash_and_Recycling/MapServer/1",lon,lat,"Trash_Route"),
+    ]);
+    if(!council) throw new Error(`That address (${matched}) doesn't appear to be inside Portland.`);
+    out.innerHTML = `<p class="small" style="margin-top:12px">Matched address: ${esc(matched)}</p>
+      <table class="itable"><tbody>
+      <tr><th style="width:220px">City Council</th><td>District ${esc(council)}</td><td style="width:120px"><a class="btn" href="${COUNCIL_URL}" target="_blank" rel="noopener">See councilor &raquo;</a></td></tr>
+      ${senate?`<tr><th>Maine State Senate</th><td>District ${esc(senate)}</td><td><a class="btn" href="${SENATE_URL}" target="_blank" rel="noopener">See senator &raquo;</a></td></tr>`:""}
+      ${house?`<tr><th>Maine House of Representatives</th><td>District ${esc(house)}</td><td><a class="btn" href="${HOUSE_URL}" target="_blank" rel="noopener">See representative &raquo;</a></td></tr>`:""}
+      ${trash?`<tr><th>Trash &amp; recycling day</th><td>${esc(trash)}</td><td><a class="btn" href="https://www.portlandmaine.gov/trash-recycling" target="_blank" rel="noopener">Details &raquo;</a></td></tr>`:""}
+      </tbody></table>
+      <p class="small">Districts come straight from the city's maps.</p>`;
+  }catch(err){ out.innerHTML=`<div class="notice">${esc(err.message||"Something went wrong.")}</div>`; }
+}
+function repsView(){
+  return `<h1>Who Represents You?</h1><p class="lede">Enter your Portland address to find your city council district, state legislators, and trash &amp; recycling day.</p>
+    <form onsubmit="lookupReps(event)"><table style="width:100%"><tbody><tr>
+      <td style="padding-right:6px"><input class="field" id="repAddr" type="text" placeholder="e.g. 389 Congress St" autocomplete="street-address"></td>
+      <td style="width:100px"><button class="btn btn-primary" type="submit" style="width:100%;padding:5px 10px">Look up</button></td>
+    </tr></tbody></table></form>
+    <p class="small">Matched against the City of Portland's official GIS maps — free, nothing stored.</p>
+    <div id="repOut"></div>`;
+}
+
+function render(skipFocus){
+  const activeId = document.activeElement && document.activeElement.id;
+  const selStart = document.activeElement && document.activeElement.selectionStart;
+  renderTabs();
+  const el = document.getElementById("content");
+  let html="";
+  switch(section){
+    case "home": html=homeView(); break;
+    case "ask": html=askView(); break;
+    case "tools": html=toolsView(); break;
+    case "report": html=reportView(); break;
+    case "permits": html=permitsView(); break;
+    case "meetings": html=meetingsView(); break;
+    case "reps": html=repsView(); break;
+  }
+  el.innerHTML = html;
+  if(section==="report") initMap();
+  if(skipFocus && activeId){
+    const n = document.getElementById(activeId);
+    if(n){ n.focus(); if(selStart!=null && n.setSelectionRange) try{n.setSelectionRange(selStart,selStart);}catch{} }
+  }
+}
+
+function readHash(){
+  const h = location.hash.replace("#","");
+  section = SECTIONS.some(s=>s.id===h) ? h : "home";
+  render();
+}
+window.addEventListener("hashchange", readHash);
+readHash();
+</script>
+</body></html>
