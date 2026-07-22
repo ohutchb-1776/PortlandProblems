@@ -17,7 +17,7 @@ const serif = Lora({
 });
 
 export const metadata: Metadata = {
-  title: "Portland Civic Front Door",
+  title: "Portland Problems",
   description:
     "Plain-language help finding the right City of Portland, Maine service — and the exact next step.",
 };

@@ -18,10 +18,10 @@ export default function Header() {
   return (
     <header className="site-header">
       <div className="site-header-inner">
-        <Link href="/ask">
-          <span className="brand serif">Portland Civic Front Door</span>
+        <Link href="/">
+          <span className="brand serif">Portland Problems</span>
           <span className="brand-sub" style={{ display: "block" }}>
-            An unofficial guide to city services
+            Get your Portland, Maine problem to the right place — fast.
           </span>
         </Link>
         <nav className="nav" aria-label="Primary">
