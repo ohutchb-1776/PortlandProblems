@@ -1,0 +1,79 @@
+{
+  "_sourceNote": "SAMPLE / curated data for v1. A live version could pull from Portland's CivicClerk portal (portlandme.portal.civicclerk.com) — it exposes an events/agenda feed — or scrape the Agendas & Minutes center (portlandmaine.gov/129/Agendas-Minutes). Map each event's title/body/date/agenda-link into the shape below.",
+  "officialCalendarUrl": "https://portlandme.portal.civicclerk.com/",
+  "publicCommentEmail": "publiccomment@portlandmaine.gov",
+  "meetings": [
+    {
+      "id": "council-2026-07-27",
+      "body": "City Council",
+      "type": "Regular Meeting",
+      "dateTime": "2026-07-27T17:00:00-04:00",
+      "location": "Council Chambers, City Hall, 389 Congress St",
+      "whatItIs": "The full nine-member City Council meets to debate and vote on ordinances, the budget, contracts, and appointments.",
+      "whyItMatters": "This is where local laws and city spending are actually decided — the final say on most citywide policy.",
+      "howToComment": "Speak in person during public comment, or email publiccomment@portlandmaine.gov with your name, legal address, and the agenda order number.",
+      "commentDeadline": "Written comments by 12:00 PM on the day of the meeting.",
+      "agendaUrl": "https://portlandme.portal.civicclerk.com/"
+    },
+    {
+      "id": "finance-2026-07-30",
+      "body": "Finance Committee",
+      "type": "Committee Meeting",
+      "dateTime": "2026-07-30T17:00:00-04:00",
+      "location": "Room 209, City Hall, 389 Congress St",
+      "whatItIs": "A council subcommittee that reviews city spending, contracts, and budget items before they reach the full Council.",
+      "whyItMatters": "Big financial decisions get shaped here first — it's an early point to weigh in before a full-Council vote.",
+      "howToComment": "Email publiccomment@portlandmaine.gov, or sign up to speak at the meeting.",
+      "commentDeadline": "Written comments by 12:00 PM the day of the meeting.",
+      "agendaUrl": "https://portlandme.portal.civicclerk.com/"
+    },
+    {
+      "id": "planning-2026-08-04",
+      "body": "Planning Board",
+      "type": "Public Hearing",
+      "dateTime": "2026-08-04T16:30:00-04:00",
+      "location": "Council Chambers, City Hall, 389 Congress St",
+      "whatItIs": "Reviews development proposals, site plans, and subdivisions, and holds public hearings on new projects.",
+      "whyItMatters": "Decides what actually gets built in your neighborhood — height, density, parking, and design.",
+      "howToComment": "Testify at the public hearing, or send written comments to the planning staff before the meeting.",
+      "commentDeadline": "Written comments at least 24 hours before the hearing.",
+      "agendaUrl": "https://portlandme.portal.civicclerk.com/"
+    },
+    {
+      "id": "hp-2026-08-05",
+      "body": "Historic Preservation Board",
+      "type": "Regular Meeting",
+      "dateTime": "2026-08-05T17:00:00-04:00",
+      "location": "Room 209, City Hall, 389 Congress St",
+      "whatItIs": "Reviews exterior changes, demolitions, and new construction in the city's historic districts.",
+      "whyItMatters": "Shapes what buildings in historic neighborhoods can look like — relevant if you own or live near a landmark property.",
+      "howToComment": "Speak at the meeting or submit written comments to preservation staff beforehand.",
+      "commentDeadline": "Written comments at least 24 hours before the meeting.",
+      "agendaUrl": "https://portlandme.portal.civicclerk.com/"
+    },
+    {
+      "id": "school-2026-08-11",
+      "body": "Board of Public Education",
+      "type": "Regular Meeting",
+      "dateTime": "2026-08-11T18:00:00-04:00",
+      "location": "Casco Bay High School, 196 Allen Ave",
+      "whatItIs": "The elected school board sets policy and the budget for Portland Public Schools.",
+      "whyItMatters": "Decisions on school budgets, staffing, and programs that affect students and families across the district.",
+      "howToComment": "Sign up for public comment at the meeting, or email the board through the district office.",
+      "commentDeadline": "Sign up before the public comment period opens at the meeting.",
+      "agendaUrl": "https://portlandme.portal.civicclerk.com/"
+    },
+    {
+      "id": "hed-2026-08-12",
+      "body": "Housing & Economic Development Committee",
+      "type": "Committee Meeting",
+      "dateTime": "2026-08-12T17:00:00-04:00",
+      "location": "Room 209, City Hall, 389 Congress St",
+      "whatItIs": "A council subcommittee focused on housing policy, development incentives, and economic programs.",
+      "whyItMatters": "Where housing and development policy is drafted before the full Council votes — key for renters and homeowners alike.",
+      "howToComment": "Email publiccomment@portlandmaine.gov, or sign up to speak at the meeting.",
+      "commentDeadline": "Written comments by 12:00 PM the day of the meeting.",
+      "agendaUrl": "https://portlandme.portal.civicclerk.com/"
+    }
+  ]
+}

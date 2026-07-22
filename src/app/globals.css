@@ -1,0 +1,293 @@
+@import "tailwindcss";
+
+/* ---- Design tokens: light-only, muted civic palette ---- */
+:root {
+  --brand: #1c3f6e;
+  --brand-dark: #142f4d;
+  --brand-soft: #e9eef5;
+  --ink: #1e2733;
+  --muted: #525c68;
+  --faint: #79828e;
+  --border: #d2d8df;
+  --bg: #eef1f4;
+  --card: #ffffff;
+  --warn-bg: #fbf3e0;
+  --warn-border: #e0c07f;
+  --warn-ink: #6a4e06;
+  --ok-bg: #e4f1e8;
+  --ok-ink: #1c6b39;
+}
+
+@theme inline {
+  --color-background: var(--bg);
+  --color-foreground: var(--ink);
+  --font-sans: var(--font-sans);
+  --font-serif: var(--font-serif);
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans), system-ui, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- Typography helpers ---- */
+.serif {
+  font-family: var(--font-serif), Georgia, "Times New Roman", serif;
+  letter-spacing: -0.01em;
+}
+.eyebrow {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--brand);
+}
+.lead {
+  font-size: 1.075rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--faint);
+}
+.meta {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* ---- Layout ---- */
+.page {
+  width: 100%;
+  max-width: 46rem;
+  margin-inline: auto;
+  padding: 2.5rem 1.25rem 4rem;
+}
+.page-wide {
+  max-width: 56rem;
+}
+
+/* ---- Card ---- */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1.25rem;
+  box-shadow: 0 1px 2px rgba(20, 40, 70, 0.05);
+}
+
+/* ---- Buttons ---- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  border-radius: 4px;
+  padding: 0.6rem 1.15rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+  text-decoration: none;
+}
+.btn-primary {
+  background: var(--brand);
+  color: #fff;
+}
+.btn-primary:hover {
+  background: var(--brand-dark);
+}
+.btn-lg {
+  padding: 0.75rem 1.4rem;
+  font-size: 1.05rem;
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---- Links ---- */
+.link {
+  color: var(--brand);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 500;
+}
+.link:hover {
+  color: var(--brand-dark);
+}
+
+/* ---- Badges / chips ---- */
+.badge {
+  display: inline-block;
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.18rem 0.5rem;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+.badge-open {
+  background: var(--ok-bg);
+  color: var(--ok-ink);
+}
+.badge-pending {
+  background: var(--warn-bg);
+  color: var(--warn-ink);
+}
+
+.chip {
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--ink);
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: border-color 0.12s ease, color 0.12s ease, background-color 0.12s ease;
+}
+.chip:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+.chip.is-active {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
+/* ---- Form fields ---- */
+.field {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 4px;
+  padding: 0.7rem 0.9rem;
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+.field::placeholder {
+  color: var(--faint);
+}
+
+/* ---- Notice / disclaimer ---- */
+.notice {
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-border);
+  color: var(--warn-ink);
+  border-radius: 4px;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+.notice a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+/* ---- Soft inset panel (timelines, comment info) ---- */
+.panel {
+  background: #f5f7f9;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.8rem 1rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+/* ---- Focus visibility (WCAG) ---- */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+.chip:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+.field:focus {
+  outline: 2px solid var(--brand);
+  outline-offset: 1px;
+  border-color: var(--brand);
+}
+
+/* ---- Skip link ---- */
+.skip-link {
+  position: absolute;
+  left: -999px;
+  top: 0;
+  z-index: 100;
+  background: #fff;
+  color: var(--brand);
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--brand);
+  border-radius: 0 0 4px 0;
+}
+.skip-link:focus {
+  left: 0;
+}
+
+/* ---- Site header ---- */
+.site-header {
+  background: var(--brand);
+  color: #fff;
+}
+.site-header a {
+  color: #fff;
+  text-decoration: none;
+}
+.site-header-inner {
+  max-width: 56rem;
+  margin-inline: auto;
+  padding: 0.9rem 1.25rem 0;
+}
+.brand {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #fff;
+}
+.brand-sub {
+  font-size: 0.78rem;
+  color: #c7d4e6;
+}
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+  margin-top: 0.75rem;
+}
+.nav a {
+  display: inline-block;
+  padding: 0.5rem 0;
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: #d5e0ee;
+  border-bottom: 3px solid transparent;
+}
+.nav a:hover {
+  color: #fff;
+}
+.nav a.active {
+  color: #fff;
+  border-bottom-color: #f0b429;
+}
+
+/* ---- Footer ---- */
+.site-footer {
+  border-top: 1px solid var(--border);
+  background: #fff;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.site-footer-inner {
+  max-width: 56rem;
+  margin-inline: auto;
+  padding: 1.5rem 1.25rem;
+}

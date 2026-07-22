@@ -1,0 +1,129 @@
+{
+  "portalUrl": "https://selfservice.portlandmaine.gov/EnerGov_Prod/SelfService#/home",
+  "portalLabel": "Start in Citizen Self Service",
+  "projects": [
+    {
+      "id": "fence",
+      "label": "Fence",
+      "emoji": "🪵",
+      "level": "maybe",
+      "verdict": "Usually no building permit — but zoning rules apply",
+      "summary": "A compliant fence generally doesn't need a building permit, but height and placement are limited by zoning.",
+      "details": "In most residential zones you can put up a fence without a building permit as long as it meets the zoning code — typically a maximum height (often around 6–7 ft in side and rear yards, and lower in front yards) while staying inside your property lines. There's no plan review or inspection for a compliant fence. But if your property is in a historic district, a shoreland zone, or an overlay district, extra review or a zoning permit can apply. When in doubt, a quick call or email to Permitting & Inspections confirms your allowed height and setbacks before you dig post holes.",
+      "checklist": [
+        "Confirm your zone's maximum fence height (commonly up to about 6–7 ft)",
+        "Keep the fence inside your property lines and required setbacks",
+        "Front-yard fences are often limited to a lower height",
+        "Check whether you're in a historic, shoreland, or overlay district",
+        "Call Permitting & Inspections if you're unsure before you build"
+      ],
+      "timeline": "No permit needed if compliant; a quick zoning question is usually answered the same week.",
+      "note": "Height and setback limits vary by zone — verify yours with the city."
+    },
+    {
+      "id": "deck",
+      "label": "Deck",
+      "emoji": "🛖",
+      "level": "yes",
+      "verdict": "You'll likely need a building permit",
+      "summary": "Most decks need a building permit — especially attached decks or any deck more than 30 inches above grade.",
+      "details": "A building permit is required for most decks, and the review focuses on structure and safety. You'll submit a site plan showing the deck's footprint and its distance to property lines, plus construction drawings covering footings and piers, beam and joist sizing, how the deck attaches to the house (the ledger), guardrails, and stairs. Once the permit is issued you build to the approved plans and call for inspections at key stages — typically footings before concrete is poured, framing before you lay the decking, and a final inspection. Permit fees are based on the project's value, and attached decks or anything over 30 inches above grade get the closest review.",
+      "checklist": [
+        "Site plan showing the deck size and distance from property lines",
+        "Construction drawings: footings/piers, framing, ledger attachment, railings, and stairs",
+        "Note the height above grade — over 30 inches usually requires guardrails",
+        "Apply for a building permit in Citizen Self Service and pay the fee",
+        "Schedule inspections (footings, framing, and final)"
+      ],
+      "timeline": "Roughly 2–4 weeks for review, depending on how complete your application is.",
+      "note": "Ground-level, freestanding platforms may be exempt — confirm with Permitting."
+    },
+    {
+      "id": "shed",
+      "label": "Shed",
+      "emoji": "🏚️",
+      "level": "maybe",
+      "verdict": "Small sheds often skip the building permit",
+      "summary": "Small one-story sheds are frequently exempt from a building permit, but still must meet zoning setbacks.",
+      "details": "Whether you need a permit comes down to size and use. Small, one-story, non-habitable accessory structures (roughly under ~200 sq ft on a typical lot) are usually exempt from a building permit — but they still have to meet zoning setbacks from property lines and other structures, and count toward your lot-coverage limit. Anything larger or taller, built on a permanent foundation, or that will have electricity or plumbing crosses into permit territory and needs a plan review. Even for an exempt shed, confirm your setbacks first so you don't have to relocate it later.",
+      "checklist": [
+        "Check the size — small one-story sheds (roughly under ~200 sq ft) are often exempt",
+        "Confirm setbacks from your property lines and lot-coverage limits",
+        "Larger, taller, foundation-set, or wired/plumbed structures need a permit",
+        "Verify your exact size and zone with Permitting before building"
+      ],
+      "timeline": "No permit if exempt; otherwise about 1–3 weeks for a small accessory structure.",
+      "note": "The exact size threshold depends on your lot and zone — confirm with the city."
+    },
+    {
+      "id": "sign",
+      "label": "Sign",
+      "emoji": "🪧",
+      "level": "yes",
+      "verdict": "Most permanent signs need a sign permit",
+      "summary": "Permanent business and property signs generally require a sign permit, with extra review in historic districts.",
+      "details": "Most permanent signs — wall signs, projecting signs, and freestanding signs — need a sign permit. The review looks at the sign's size, placement, height, illumination, and how it attaches to the building, and the total sign area has to fit within what your zone allows for that property. You'll provide a scaled drawing or a photo showing the dimensions and exact location. Historic districts and some corridors add design standards and a separate review step. Certain temporary or very small signs can be exempt, but permanent business signage almost always requires a permit.",
+      "checklist": [
+        "Prepare a scaled drawing or photo with the sign's dimensions and location",
+        "Note how it's mounted and whether it's illuminated",
+        "Confirm your zone's total allowed sign area and placement rules",
+        "If you're in a historic district, plan for additional design review",
+        "Apply for a sign permit in Citizen Self Service"
+      ],
+      "timeline": "About 1–3 weeks; longer if your property is in a historic district."
+    },
+    {
+      "id": "short-term-rental",
+      "label": "Short-term rental",
+      "emoji": "🏡",
+      "level": "yes",
+      "verdict": "Yes — Portland requires yearly STR registration",
+      "summary": "Every short-term rental unit must be registered with the city each year, with a fire-safety inspection and your registration number shown in listings.",
+      "details": "Portland regulates short-term rentals (stays under 30 days) through an annual registration rather than a building permit. Each unit must be registered with the city, pass a fire-safety inspection, and display its registration number on every listing. Registration is tied to a classification — owner-occupied, tenant-occupied, or non-owner-occupied — and the city caps the number of non-owner-occupied mainland units, so new licenses in that category may simply be unavailable. You renew every year by January 1, and you're responsible for collecting and remitting state and local lodging taxes.",
+      "checklist": [
+        "Register the unit with the city and pay the annual fee",
+        "Pass a fire-safety inspection (about $100 for new applications)",
+        "Confirm your classification (owner-occupied vs. non-owner-occupied) and any caps",
+        "Display your registration number in every listing (Airbnb, VRBO, etc.)",
+        "Renew by January 1 each year and remit lodging taxes"
+      ],
+      "timeline": "Plan for a few weeks, including scheduling the fire-safety inspection.",
+      "note": "This is a registration/licensing process, not a building permit."
+    },
+    {
+      "id": "food-truck",
+      "label": "Food truck",
+      "emoji": "🚚",
+      "level": "yes",
+      "verdict": "Yes — you'll need city and state licensing",
+      "summary": "Mobile food vending needs both a city vending permit and a state health license, plus a passing health inspection.",
+      "details": "Operating a food truck takes approvals from two levels of government. The State of Maine (through DACF / DHHS) issues the Mobile Food Service license and inspects the unit for sanitation, water supply, waste handling, and fire suppression. The City of Portland then issues the mobile vending permit that lets you operate here and governs where and when you can vend. On top of that you'll need the usual business basics — business registration, insurance, and any commissary agreement or fire-department sign-off. Budget several weeks, since the state and city steps run somewhat independently.",
+      "checklist": [
+        "Get a State Mobile Food Service license (Maine DACF / DHHS) and pass the health inspection",
+        "Get a city mobile vending permit through Portland Permitting",
+        "Meet equipment rules (hand sink, water tanks, fire suppression)",
+        "Line up business registration, insurance, and any commissary agreement",
+        "Confirm exactly where and when you're allowed to vend"
+      ],
+      "timeline": "Several weeks — state licensing plus city permitting run in parallel.",
+      "note": "This involves state agencies in addition to the city."
+    },
+    {
+      "id": "interior-reno",
+      "label": "Interior reno",
+      "emoji": "🛠️",
+      "level": "maybe",
+      "verdict": "Depends on what you're changing",
+      "summary": "Cosmetic updates are usually fine without a permit; structural, electrical, or plumbing changes need one.",
+      "details": "Whether you need a permit depends entirely on what you're touching. Purely cosmetic work — paint, flooring, trim, cabinets, or swapping fixtures like-for-like — generally needs no permit. But the moment you affect structure (removing or moving a wall, altering the roof, changing a window or door opening) or the electrical, plumbing, or mechanical systems, a permit for that trade is required, and structural work needs drawings. Changes that affect egress, fire separation, or how the space is used get extra scrutiny. A project that mixes several trades may need more than one permit, and inspections happen before you close the walls back up.",
+      "checklist": [
+        "Paint, flooring, trim, cabinets, like-for-like fixtures: usually no permit",
+        "Moving walls, structural changes, or new/enlarged window and door openings: building permit",
+        "New or altered wiring: electrical permit",
+        "New or moved plumbing: plumbing permit",
+        "Apply for the relevant permit(s) in Citizen Self Service before closing up walls"
+      ],
+      "timeline": "Simple trade permits about 1–2 weeks; structural review 2–4 weeks."
+    }
+  ]
+}

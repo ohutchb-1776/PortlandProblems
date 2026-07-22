@@ -1,0 +1,110 @@
+[
+  {
+    "id": "pothole-street-hazard",
+    "keywords": ["pothole", "potholes", "road damage", "street hazard", "sinkhole", "damaged road", "crumbling street", "pavement"],
+    "title": "Report a Pothole or Street Hazard",
+    "explanation": "Potholes and damaged roads are fixed by the Public Works patch crew. The fastest way to get one filled is to report it through Portland 311, which sends it straight to the crew and lets you track the fix.",
+    "department": "Public Works (via Portland 311)",
+    "actionLabel": "Report it on Portland 311",
+    "actionUrl": "https://seeclickfix.com/portland_2"
+  },
+  {
+    "id": "streetlight-sign-graffiti",
+    "keywords": ["street light", "streetlight", "light out", "graffiti", "broken sign", "damaged sign", "vandalism", "faded sign"],
+    "title": "Report a Broken Street Light, Sign, or Graffiti",
+    "explanation": "Burned-out street lights, damaged signs, and graffiti on public property are all handled by the city and routed to the right crew when you report them through Portland 311.",
+    "department": "Public Works (via Portland 311)",
+    "actionLabel": "Report it on Portland 311",
+    "actionUrl": "https://seeclickfix.com/portland_2"
+  },
+  {
+    "id": "dead-tree-street",
+    "keywords": ["tree", "dead tree", "fallen tree", "branch", "limb", "hanging branch", "street tree", "city tree", "overgrown"],
+    "title": "Report a Dead or Fallen Street Tree",
+    "explanation": "Trees in the public right-of-way (along streets and sidewalks) are maintained by the city. Report a dead, damaged, or fallen street tree through Portland 311 and it will be routed to the crew that handles city trees.",
+    "department": "Public Works (via Portland 311)",
+    "actionLabel": "Report the tree on Portland 311",
+    "actionUrl": "https://seeclickfix.com/portland_2"
+  },
+  {
+    "id": "snow-plowing-streets",
+    "keywords": ["snow", "plow", "plowing", "unplowed", "snow removal", "sidewalk snow", "sewer", "stormwater", "flooding", "catch basin", "drain"],
+    "title": "Snow Plowing, Streets & Drainage",
+    "explanation": "Public Works maintains city streets and sidewalks, plows during winter storms, and manages sewers and storm drains. Their page has plow-route info, winter parking ban details, and contacts.",
+    "department": "Department of Public Works",
+    "actionLabel": "Public Works info & contacts",
+    "actionUrl": "https://www.portlandmaine.gov/public-works"
+  },
+  {
+    "id": "trash-recycling-schedule",
+    "keywords": ["trash", "garbage", "recycling", "recycle", "collection", "pickup", "pay as you throw", "purple bags", "compost", "yard waste", "bulky item"],
+    "title": "Trash & Recycling Collection",
+    "explanation": "Portland uses a Pay-As-You-Throw system for curbside trash, with weekly recycling collection run by Public Works. This page has your collection rules, what's recyclable, and where to buy official trash bags.",
+    "department": "Public Works — Solid Waste",
+    "actionLabel": "Trash & Recycling info",
+    "actionUrl": "https://www.portlandmaine.gov/trash-recycling"
+  },
+  {
+    "id": "get-a-recycling-bin",
+    "keywords": ["trash bin", "recycling bin", "get a bin", "new bin", "cart", "container", "replacement bin", "missing bin", "damaged bin"],
+    "title": "Get or Replace a Recycling Bin",
+    "explanation": "The city provides recycling bins for curbside collection. To request a new or replacement bin, or to ask about trash containers, start from the Trash & Recycling page for the current request process and contacts.",
+    "department": "Public Works — Solid Waste",
+    "actionLabel": "Request a bin (Trash & Recycling)",
+    "actionUrl": "https://www.portlandmaine.gov/trash-recycling"
+  },
+  {
+    "id": "parking-ticket-permit",
+    "keywords": ["parking", "ticket", "citation", "parking permit", "meter", "parking ban", "towed", "tow", "garage", "residential permit"],
+    "title": "Parking Tickets, Permits & Bans",
+    "explanation": "Pay or appeal a parking ticket, buy a residential parking permit, or check winter parking bans. Payments and permits are handled through the city's online parking customer portal.",
+    "department": "Parking Division",
+    "actionLabel": "Parking permits & payment portal",
+    "actionUrl": "https://portlandme.cmrpay.com/permits"
+  },
+  {
+    "id": "building-permit-deck",
+    "keywords": ["permit", "building permit", "deck permit", "deck", "fence", "renovation", "remodel", "addition", "electrical", "plumbing", "construction", "certificate of occupancy"],
+    "title": "Building & Deck Permits",
+    "explanation": "Projects like a new deck, fence, addition, or major renovation usually need a permit. Portland's Permitting & Inspections Department runs a one-stop shop, and all applications are submitted online through the Citizen Self Service portal.",
+    "department": "Permitting & Inspections Department",
+    "actionLabel": "Apply via Citizen Self Service",
+    "actionUrl": "https://www.portlandmaine.gov/376/Citizen-Self-Service"
+  },
+  {
+    "id": "code-violation-complaint",
+    "keywords": ["without a permit", "no permit", "illegal construction", "code violation", "zoning", "neighbor building", "unpermitted", "property violation", "unsafe building", "complaint"],
+    "title": "Report Work Being Done Without a Permit",
+    "explanation": "If a neighbor is building or doing major work that may not be permitted, code enforcement falls under the Permitting & Inspections Department. Start from their page to file a complaint or ask whether a project is permitted.",
+    "department": "Permitting & Inspections — Code Enforcement",
+    "actionLabel": "Permitting & Inspections",
+    "actionUrl": "https://www.portlandmaine.gov/349/Permitting-Inspections"
+  },
+  {
+    "id": "property-tax-assessor",
+    "keywords": ["property tax", "taxes", "tax bill", "assessment", "assessor", "assessed value", "pay taxes", "real estate tax", "abatement"],
+    "title": "Property Taxes & Assessments",
+    "explanation": "Look up your property's assessed value, understand your tax bill, or pay property taxes online. The Assessor's Office handles valuations and the city's property tax page handles payments.",
+    "department": "Assessor's Office",
+    "actionLabel": "Property taxes & payment",
+    "actionUrl": "https://www.portlandmaine.gov/property-taxes"
+  },
+  {
+    "id": "vital-records-licenses",
+    "keywords": ["birth certificate", "death certificate", "marriage license", "vital record", "dog license", "business license", "city clerk", "certified copy"],
+    "title": "Birth, Death & Marriage Records; Licenses",
+    "explanation": "The City Clerk issues certified birth, death, and marriage records for events that occurred in Portland, and handles dog and business licenses. You can request most vital records online.",
+    "department": "City Clerk's Office",
+    "actionLabel": "Request a vital record",
+    "actionUrl": "https://www.portlandmaine.gov/169/Request-A-Vital-Record"
+  },
+  {
+    "id": "find-a-department",
+    "keywords": ["department", "who handles", "contact", "phone number", "city hall", "office", "directory", "not sure"],
+    "title": "Find the Right City Department",
+    "explanation": "Not sure who handles your issue? Browse the full directory of Portland city departments and services to find the right office and its contact information.",
+    "department": "City of Portland",
+    "actionLabel": "City department directory",
+    "actionUrl": "https://www.portlandmaine.gov/167/Departments"
+  }
+]

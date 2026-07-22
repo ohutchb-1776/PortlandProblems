@@ -1,0 +1,102 @@
+[
+  {
+    "name": "Maine Tool Library",
+    "category": "Borrow",
+    "whatItIs": "A lending library for tools instead of books — gardening, landscaping, home-improvement, and kitchen tools you can check out for a week.",
+    "whoItsFor": "DIY-ers, gardeners, and renters doing a one-off home project without buying tools.",
+    "cost": "Membership-based (sliding-scale subscription)",
+    "howToAccess": "Visit during open hours (Tue / Thu / Sat) at 224 Anderson St, or sign up online to become a member, then borrow tools on a weekly loan.",
+    "url": "https://portlandmainetoollibrary.org/",
+    "location": "224 Anderson St, Portland"
+  },
+  {
+    "name": "Library Museum & Park Passes",
+    "category": "Borrow",
+    "whatItIs": "Free passes the Portland Public Library lends out to museums, state parks, and cultural sites — the Portland Museum of Art, Coastal Maine Botanical Gardens, Maine State Parks, and more.",
+    "whoItsFor": "Families, students, and anyone wanting a free museum or park day.",
+    "cost": "Free with a library card",
+    "howToAccess": "Reserve a pass in the library catalog or call (207) 871-1700 x730, then pick it up at your branch.",
+    "url": "https://www.portlandlibrary.com/using-the-library/request-museum-passes/",
+    "location": "All PPL branches"
+  },
+  {
+    "name": "Library of Things",
+    "category": "Borrow",
+    "whatItIs": "Beyond books, the Portland Public Library lends everyday gear — mobile Wi-Fi hotspots, microscopes, and telescope / night-sky kits — with your library card.",
+    "whoItsFor": "Students, hobbyists, and travelers who need a gadget for a short time.",
+    "cost": "Free with a library card",
+    "howToAccess": "Browse the catalog, place a hold on the item, and pick it up at your branch with your library card.",
+    "url": "https://www.portlandlibrary.com/using-the-library/borrow-materials/",
+    "location": "All PPL branches"
+  },
+  {
+    "name": "Public EV Charging Stations",
+    "category": "Get Around",
+    "whatItIs": "City-owned electric-vehicle chargers at downtown garages and lots — free to use while you're parked.",
+    "whoItsFor": "EV drivers parking downtown.",
+    "cost": "Free to charge; garage parking fees apply ($3–$5/hr)",
+    "howToAccess": "Drive up to a city charger (Elm, Spring, or Temple St garage, Payson Park, or City Hall) and plug in while parked.",
+    "url": "https://www.portlandmaine.gov/1620/Electric-Vehicles",
+    "location": "Downtown garages & city lots"
+  },
+  {
+    "name": "Community Gardens",
+    "category": "Outdoors",
+    "whatItIs": "Ten neighborhood garden sites the city runs with Cultivating Community, where residents can rent a plot to grow their own food.",
+    "whoItsFor": "Residents who want space to grow vegetables and flowers.",
+    "cost": "Low seasonal plot fee",
+    "howToAccess": "Apply for a plot through the city / Cultivating Community, and join the waitlist if your neighborhood garden is full.",
+    "url": "https://www.portlandmaine.gov/community-gardens",
+    "location": "10 gardens citywide"
+  },
+  {
+    "name": "Public Boat Launch",
+    "category": "Outdoors",
+    "whatItIs": "A public, all-tides boat ramp at East End Beach on the Eastern Promenade, for launching recreational boats and kayaks on Casco Bay.",
+    "whoItsFor": "Boaters, kayakers, and paddlers.",
+    "cost": "$5 day-use fee for trailered boats; free to hand-carry a kayak in",
+    "howToAccess": "Launch at East End Beach off the Eastern Promenade and pay the $5 day-use fee at the self-pay station if a ranger isn't present.",
+    "url": "https://portlandme.myrec.com/",
+    "location": "East End Beach, Eastern Promenade"
+  },
+  {
+    "name": "Bulky-Item Pickup",
+    "category": "Waste & Recycling",
+    "whatItIs": "Public Works curbside collection for large items that won't fit in a trash bag — furniture, appliances, mattresses, and most electronics.",
+    "whoItsFor": "Residents clearing out furniture, appliances, or electronics.",
+    "cost": "Free for items ≤30 lbs (limit 10/year); $40 per heavier item",
+    "howToAccess": "Apply for a Bulky Waste Permit online first, then set the items curbside on your scheduled collection day.",
+    "url": "https://www.portlandmaine.gov/534/Bulky-Waste-Collection-Permit",
+    "location": "Curbside, citywide"
+  },
+  {
+    "name": "Composting & Recycling",
+    "category": "Waste & Recycling",
+    "whatItIs": "The city's curbside recycling program plus guidance on what's accepted and how to keep food scraps and yard waste out of the trash.",
+    "whoItsFor": "All residents and households.",
+    "cost": "Free curbside recycling; Pay-As-You-Throw bags for trash",
+    "howToAccess": "Set recycling curbside on your collection day, and check the guide for accepted materials and composting options.",
+    "url": "https://www.portlandmaine.gov/trash-recycling",
+    "location": "Curbside, citywide"
+  },
+  {
+    "name": "Board & Commission Seats",
+    "category": "Get Involved",
+    "whatItIs": "Open volunteer seats on the city's boards and commissions — from historic preservation to the police review board — listed and applied for through OnBoardGOV.",
+    "whoItsFor": "Residents who want a real say in city decisions.",
+    "cost": "Free — volunteer civic service",
+    "howToAccess": "Browse open seats on OnBoardGOV and apply online; contact the City Clerk with questions.",
+    "url": "https://onboard.portlandmaine.gov/",
+    "location": "Online (citywide boards)"
+  },
+  {
+    "name": "Public Meeting Rooms",
+    "category": "Spaces",
+    "whatItIs": "Bookable rooms and study pods at the Portland Public Library that community groups and small teams can use.",
+    "whoItsFor": "Community groups, nonprofits, and study groups.",
+    "cost": "Free / low-cost (rental rates vary)",
+    "howToAccess": "Check room availability and rates on the library's Room Rentals page, or call the Reference Desk at (207) 871-1700 x725 about study pods.",
+    "url": "https://www.portlandlibrary.com/locations/downtown/room-rentals/",
+    "location": "5 Monument Square (Downtown)"
+  }
+]

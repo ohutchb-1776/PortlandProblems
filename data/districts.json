@@ -1,0 +1,58 @@
+{
+  "_sampleNote": "SAMPLE DATA — this is a stub keyed on crude address keyword matching. A real version should geocode the address and query Portland's ArcGIS services (services.arcgis.com / arcgis.portlandmaine.gov) for council district, school-board district, state legislative districts, polling place, and collection zone, then map to current officials.",
+  "default": {
+    "councilDistrict": "Your council district",
+    "councilor": "Sample Councilor",
+    "atLarge": "Plus 3 at-large councilors and the Mayor, elected citywide",
+    "schoolBoardRep": "Sample School Board Member",
+    "stateSenator": "Sample State Senator (Maine Senate)",
+    "stateRep": "Sample State Representative (Maine House)",
+    "pollingPlace": "Merrill Auditorium, 20 Myrtle St",
+    "trashDay": "Wednesday",
+    "recyclingNote": "Recycling collected every other week (confirm your A/B week)"
+  },
+  "districts": [
+    {
+      "match": ["munjoy", "eastern prom", "india st", "congress st", "04101", "fore st", "middle st"],
+      "result": {
+        "councilDistrict": "District 1 (East End / Munjoy Hill)",
+        "councilor": "Sample Councilor — District 1",
+        "atLarge": "Plus 3 at-large councilors and the Mayor, elected citywide",
+        "schoolBoardRep": "Sample School Board Member — District 1",
+        "stateSenator": "Sample State Senator — Senate District 27",
+        "stateRep": "Sample State Rep — House District 118",
+        "pollingPlace": "East End Community School, 195 North St",
+        "trashDay": "Monday",
+        "recyclingNote": "Recycling collected every other week — Week A"
+      }
+    },
+    {
+      "match": ["west end", "state st", "pine st", "brackett", "04102", "danforth", "vaughan"],
+      "result": {
+        "councilDistrict": "District 2 (West End / Parkside)",
+        "councilor": "Sample Councilor — District 2",
+        "atLarge": "Plus 3 at-large councilors and the Mayor, elected citywide",
+        "schoolBoardRep": "Sample School Board Member — District 2",
+        "stateSenator": "Sample State Senator — Senate District 28",
+        "stateRep": "Sample State Rep — House District 119",
+        "pollingPlace": "Reiche Community Center, 166 Brackett St",
+        "trashDay": "Tuesday",
+        "recyclingNote": "Recycling collected every other week — Week B"
+      }
+    },
+    {
+      "match": ["deering", "forest ave", "woodford", "ocean ave", "04103", "back cove", "allen ave"],
+      "result": {
+        "councilDistrict": "District 3 (Deering / Back Cove)",
+        "councilor": "Sample Councilor — District 3",
+        "atLarge": "Plus 3 at-large councilors and the Mayor, elected citywide",
+        "schoolBoardRep": "Sample School Board Member — District 3",
+        "stateSenator": "Sample State Senator — Senate District 29",
+        "stateRep": "Sample State Rep — House District 120",
+        "pollingPlace": "Deering High School, 370 Stevens Ave",
+        "trashDay": "Thursday",
+        "recyclingNote": "Recycling collected every other week — Week A"
+      }
+    }
+  ]
+}

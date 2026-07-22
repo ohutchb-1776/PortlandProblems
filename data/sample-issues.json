@@ -1,0 +1,112 @@
+{
+  "_comment": "MOCK DATA — mirrors the SeeClickFix v2 /issues response shape (place_url=portland_2). Not live. Replace with a live fetch later.",
+  "issues": [
+    {
+      "id": 90000001,
+      "status": "Open",
+      "summary": "Pothole",
+      "description": "Deep pothole in the eastbound lane near the crosswalk, been getting worse after the rain.",
+      "address": "512 Congress St, Portland, ME 04101, USA",
+      "lat": 43.65695,
+      "lng": -70.25935,
+      "created_at": "2026-07-21T08:12:00-04:00",
+      "html_url": "https://seeclickfix.com/issues/90000001",
+      "request_type": { "id": 101, "title": "Pothole", "organization": "City of Portland" },
+      "media": { "representative_image_url": null }
+    },
+    {
+      "id": 90000002,
+      "status": "Acknowledged",
+      "summary": "Street Light Out",
+      "description": "Street light has been out for over a week, whole corner is dark at night.",
+      "address": "78 Washington Ave, Portland, ME 04101, USA",
+      "lat": 43.67285,
+      "lng": -70.25520,
+      "created_at": "2026-07-20T21:40:00-04:00",
+      "html_url": "https://seeclickfix.com/issues/90000002",
+      "request_type": { "id": 102, "title": "Street Light", "organization": "City of Portland" },
+      "media": { "representative_image_url": null }
+    },
+    {
+      "id": 90000003,
+      "status": "Open",
+      "summary": "Graffiti",
+      "description": "Graffiti on the side of the utility box at the bus stop.",
+      "address": "20 Monument Sq, Portland, ME 04101, USA",
+      "lat": 43.65640,
+      "lng": -70.25755,
+      "created_at": "2026-07-20T14:05:00-04:00",
+      "html_url": "https://seeclickfix.com/issues/90000003",
+      "request_type": { "id": 103, "title": "Graffiti", "organization": "City of Portland" },
+      "media": { "representative_image_url": null }
+    },
+    {
+      "id": 90000004,
+      "status": "Open",
+      "summary": "Illegal Dumping",
+      "description": "Someone left a couch and several trash bags on the curb, not a pickup day.",
+      "address": "155 St John St, Portland, ME 04102, USA",
+      "lat": 43.65565,
+      "lng": -70.28190,
+      "created_at": "2026-07-19T17:22:00-04:00",
+      "html_url": "https://seeclickfix.com/issues/90000004",
+      "request_type": { "id": 104, "title": "Illegal Dumping", "organization": "City of Portland" },
+      "media": { "representative_image_url": null }
+    },
+    {
+      "id": 90000005,
+      "status": "Acknowledged",
+      "summary": "Damaged Sign",
+      "description": "Stop sign is bent and hard to see coming down the hill.",
+      "address": "The Eastern Promenade, Portland, ME 04101, USA",
+      "lat": 43.66575,
+      "lng": -70.24430,
+      "created_at": "2026-07-19T09:15:00-04:00",
+      "html_url": "https://seeclickfix.com/issues/90000005",
+      "request_type": { "id": 105, "title": "Traffic Sign", "organization": "City of Portland" },
+      "media": { "representative_image_url": null }
+    },
+    {
+      "id": 90000006,
+      "status": "Open",
+      "summary": "Damaged Sidewalk",
+      "description": "Sidewalk slab is heaved up several inches, tripping hazard for the school route.",
+      "address": "340 Forest Ave, Portland, ME 04101, USA",
+      "lat": 43.67130,
+      "lng": -70.27540,
+      "created_at": "2026-07-18T12:48:00-04:00",
+      "html_url": "https://seeclickfix.com/issues/90000006",
+      "request_type": { "id": 106, "title": "Sidewalk", "organization": "City of Portland" },
+      "media": { "representative_image_url": null }
+    },
+    {
+      "id": 90000007,
+      "status": "Open",
+      "summary": "Fallen Tree Limb",
+      "description": "Large limb down blocking half the sidewalk after last night's wind.",
+      "address": "88 Deering Ave, Portland, ME 04102, USA",
+      "lat": 43.66480,
+      "lng": -70.28090,
+      "created_at": "2026-07-18T07:03:00-04:00",
+      "html_url": "https://seeclickfix.com/issues/90000007",
+      "request_type": { "id": 107, "title": "Tree", "organization": "City of Portland" },
+      "media": { "representative_image_url": null }
+    },
+    {
+      "id": 90000008,
+      "status": "Acknowledged",
+      "summary": "Clogged Catch Basin",
+      "description": "Storm drain is blocked with leaves and debris, water pooling across the road.",
+      "address": "410 Commercial St, Portland, ME 04101, USA",
+      "lat": 43.65370,
+      "lng": -70.25060,
+      "created_at": "2026-07-17T15:31:00-04:00",
+      "html_url": "https://seeclickfix.com/issues/90000008",
+      "request_type": { "id": 108, "title": "Storm Drain", "organization": "City of Portland" },
+      "media": { "representative_image_url": null }
+    }
+  ],
+  "metadata": {
+    "pagination": { "entries": 8, "page": 1, "per_page": 20, "pages": 1 }
+  }
+}
