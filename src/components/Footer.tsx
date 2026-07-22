@@ -20,7 +20,7 @@ export default function Footer() {
           · Report a problem:{" "}
           <a
             className="link"
-            href="https://seeclickfix.com/portland_2"
+            href="https://seeclickfix.com/portland_2/report"
             target="_blank"
             rel="noopener noreferrer"
           >

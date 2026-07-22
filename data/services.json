@@ -6,7 +6,7 @@
     "explanation": "Potholes and damaged roads are fixed by the Public Works patch crew. The fastest way to get one filled is to report it through Portland 311, which sends it straight to the crew and lets you track the fix.",
     "department": "Public Works (via Portland 311)",
     "actionLabel": "Report it on Portland 311",
-    "actionUrl": "https://seeclickfix.com/portland_2"
+    "actionUrl": "https://seeclickfix.com/portland_2/report"
   },
   {
     "id": "streetlight-sign-graffiti",
@@ -15,7 +15,7 @@
     "explanation": "Burned-out street lights, damaged signs, and graffiti on public property are all handled by the city and routed to the right crew when you report them through Portland 311.",
     "department": "Public Works (via Portland 311)",
     "actionLabel": "Report it on Portland 311",
-    "actionUrl": "https://seeclickfix.com/portland_2"
+    "actionUrl": "https://seeclickfix.com/portland_2/report"
   },
   {
     "id": "dead-tree-street",
@@ -24,7 +24,7 @@
     "explanation": "Trees in the public right-of-way (along streets and sidewalks) are maintained by the city. Report a dead, damaged, or fallen street tree through Portland 311 and it will be routed to the crew that handles city trees.",
     "department": "Public Works (via Portland 311)",
     "actionLabel": "Report the tree on Portland 311",
-    "actionUrl": "https://seeclickfix.com/portland_2"
+    "actionUrl": "https://seeclickfix.com/portland_2/report"
   },
   {
     "id": "snow-plowing-streets",

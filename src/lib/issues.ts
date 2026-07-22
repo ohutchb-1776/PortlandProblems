@@ -52,5 +52,5 @@ export const issues: Issue[] = (sampleData as IssuesResponse).issues.map((r) => 
 /** Map center — downtown Portland, Maine. */
 export const PORTLAND_CENTER: [number, number] = [43.6591, -70.2568];
 
-/** Deep link to the official SeeClickFix report flow for Portland, ME (portland_2). */
-export const REPORT_URL = "https://seeclickfix.com/portland_2";
+/** Deep link straight to the SeeClickFix report form for Portland, ME (portland_2). */
+export const REPORT_URL = "https://seeclickfix.com/portland_2/report";

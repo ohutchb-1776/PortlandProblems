@@ -15,8 +15,8 @@
     "whatItIs": "Free passes the Portland Public Library lends out to museums, state parks, and cultural sites — the Portland Museum of Art, Coastal Maine Botanical Gardens, Maine State Parks, and more.",
     "whoItsFor": "Families, students, and anyone wanting a free museum or park day.",
     "cost": "Free with a library card",
-    "howToAccess": "Reserve a pass in the library catalog or call (207) 871-1700 x730, then pick it up at your branch.",
-    "url": "https://www.portlandlibrary.com/using-the-library/request-museum-passes/",
+    "howToAccess": "Browse and reserve passes on the library's Museums & More page, or call (207) 871-1700, then pick up your pass or tickets.",
+    "url": "https://www.portlandlibrary.org/arts-culture/",
     "location": "All PPL branches"
   },
   {
@@ -25,8 +25,8 @@
     "whatItIs": "Beyond books, the Portland Public Library lends everyday gear — mobile Wi-Fi hotspots, microscopes, and telescope / night-sky kits — with your library card.",
     "whoItsFor": "Students, hobbyists, and travelers who need a gadget for a short time.",
     "cost": "Free with a library card",
-    "howToAccess": "Browse the catalog, place a hold on the item, and pick it up at your branch with your library card.",
-    "url": "https://www.portlandlibrary.com/using-the-library/borrow-materials/",
+    "howToAccess": "Browse the Library of Things in the catalog, place a hold on the item you want, and pick it up at your branch with your library card.",
+    "url": "https://ppl-dirigo.na5.iiivega.com/search?query=PPL%20Library%20of%20Things&searchType=everything&pageSize=10",
     "location": "All PPL branches"
   },
   {
@@ -95,8 +95,8 @@
     "whatItIs": "Bookable rooms and study pods at the Portland Public Library that community groups and small teams can use.",
     "whoItsFor": "Community groups, nonprofits, and study groups.",
     "cost": "Free / low-cost (rental rates vary)",
-    "howToAccess": "Check room availability and rates on the library's Room Rentals page, or call the Reference Desk at (207) 871-1700 x725 about study pods.",
-    "url": "https://www.portlandlibrary.com/locations/downtown/room-rentals/",
+    "howToAccess": "See the Downtown Branch page for its meeting rooms, or call the library at (207) 871-1700 to ask about reserving a room or study pod.",
+    "url": "https://www.portlandlibrary.org/downtown-branch/",
     "location": "5 Monument Square (Downtown)"
   }
 ]

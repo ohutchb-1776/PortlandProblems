@@ -114,7 +114,7 @@ function NoMatch() {
       </p>
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <a
-          href="https://seeclickfix.com/portland_2"
+          href="https://seeclickfix.com/portland_2/report"
           target="_blank"
           rel="noopener noreferrer"
           className="btn btn-primary"
