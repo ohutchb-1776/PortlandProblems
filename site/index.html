@@ -176,6 +176,11 @@ img { border: 0; }
 .sidebox ul { margin: 0; padding-left: 16px; }
 .sidebox li { margin-bottom: 3px; }
 
+/* -------- home photo -------- */
+.hero { margin: 4px 0 12px; }
+.hero img { width: 100%; height: auto; display: block; border: 1px solid #999; }
+.hero-cap { font-style: italic; font-size: 10px; color: #666; margin-top: 3px; text-align: center; }
+
 /* -------- home index list -------- */
 .indexlist { width: 100%; border-collapse: collapse; margin-top: 8px; }
 .indexlist td {
@@ -534,11 +539,20 @@ function homeView(){
     <h1>Welcome</h1>
     <p class="lede">Portland Problems is a plain-language guide to city rules and services in Portland, Maine. Zoning codes, permit requirements, and planning decisions are usually written for staff and lawyers &mdash; this site translates them into everyday English so residents can actually use them.</p>
     <p>Use it to understand what you can build on a property, whether a project needs a permit, how the city's zoning applies to your address, and where to find the planning information behind local decisions. Every answer links straight to the real city service or record, so there's no jargon and no dead ends.</p>
+    <div class="hero"><img src="portland.jpg" alt="Aerial view of Portland, Maine — the Cathedral of the Immaculate Conception with Casco Bay beyond" width="660" height="441"><div class="hero-cap">Portland. Simple, the way the internet should be.</div></div>
     <p>Pick a section below to get started. Whether you're planning a renovation, following a planning-board meeting, reporting a problem, or looking up who represents you, the goal is the same: clearer answers and less runaround.</p>
     <table class="indexlist"><tbody>${HOME_ITEMS.map(([id,t,d])=>
       `<tr><td class="icon">&raquo;</td><td><a class="title" href="#${id}" onclick="event.preventDefault();go('${id}')">${t}</a><div class="desc">${d}</div></td></tr>`).join("")}
     </tbody></table></div>
     <div class="side">
+      <div class="sidebox"><h3>About the Creator</h3>
+        <p style="margin:0 0 6px">Omari Brent &mdash; senior at the Waynflete School. I built this site (back-end support from Claude Code) because I was tired of digging through unorganized government websites. I hope it serves as a helpful tool that encourages civic engagement.</p>
+        <ul>
+          <li><a href="mailto:ohutchb@gmail.com">ohutchb@gmail.com</a></li>
+          <li><a href="https://www.linkedin.com/in/omari-brent-836542364" target="_blank" rel="noopener">LinkedIn</a></li>
+        </ul>
+        <p class="small" style="margin:6px 0 0">Questions or suggestions? Please reach out!</p>
+      </div>
       <div class="sidebox"><h3>Announcements</h3><ul><li>Winter parking ban runs Nov 1 – Apr 15.</li><li>City Council meets Mon, Jul 27 at 5 PM.</li><li>Bulky-item pickup permits available online.</li></ul></div>
       <div class="sidebox"><h3>Quick Links</h3><ul>
         <li><a href="#property" onclick="event.preventDefault();go('property')">Look Up Your Zoning</a></li>
