@@ -5,8 +5,32 @@
 <meta name="viewport" content="width=1000">
 <title>Portland Problems — Portland, Maine Civic Guide</title>
 <meta name="description" content="A plain-language guide to getting things done in Portland, Maine: report issues, permits, meetings, and find your reps.">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Defense-in-depth: restrict where code, styles, images, and network calls
+     may come from. 'unsafe-inline' is required for script-src because the whole
+     app is one inline <script> in this file; the directive still blocks script
+     loads from any origin other than unpkg. (frame-ancestors, sandbox, and
+     report-uri are ignored in a <meta> CSP — those need real HTTP headers,
+     which GitHub Pages doesn't let us set.) -->
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' https://unpkg.com;
+  style-src 'self' 'unsafe-inline' https://unpkg.com;
+  img-src 'self' data: https://unpkg.com https://tile.openstreetmap.org https://*.tile.openstreetmap.org;
+  connect-src 'self' https://nominatim.openstreetmap.org https://gis.portlandmaine.gov;
+  font-src 'self';
+  object-src 'none';
+  base-uri 'self';
+  form-action 'none';
+  upgrade-insecure-requests">
+<!-- SRI pins these to the exact Leaflet 1.9.4 files (hashes verified against
+     the versions published on leafletjs.com), so a compromised CDN can't
+     substitute modified code. -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H"
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH"
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <style>
 /* Portland Problems — 2010-era municipal site aesthetic.
    No Tailwind. Fixed 960px width, Verdana body, Georgia titles, gradient blue
@@ -277,6 +301,21 @@ input.field:focus { outline: 1px solid #1e4e8c; }
 .btn-primary:hover { background-image: linear-gradient(to bottom, #5b8ed6, #295ea0); color: #fff; }
 .btn-primary:visited { color: #fff; }
 .btn:disabled { opacity: 0.5; cursor: default; }
+
+/* A control that looks like a link but is a real <button> — used where the
+   action changes view state rather than navigating, so it needs no href. */
+.linkbtn {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-family: inherit;
+  font-size: inherit;
+  color: #0055aa;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.linkbtn:hover { color: #cc0000; }
+.linkbtn:focus-visible { outline: 2px solid #1e4e8c; outline-offset: 1px; }
 
 /* -------- info table (used for services/tools/meetings) -------- */
 .itable { border: 1px solid #b7c0cc; border-collapse: collapse; width: 100%; margin: 10px 0; background: #fff; }
@@ -571,7 +610,9 @@ const I18N = { en: { strings: {
   "ask.title":"What do you need?",
   "ask.lede":"Describe your problem in plain words. We'll explain it, name the city department that handles it, and give you the exact next step.",
   "ask.ph":"e.g. there's a pothole on my street",
+  "ask.label":"Describe your problem",
   "ask.try":"Try one of these:",
+  "ask.examplesLabel":"Example problems",
   "ask.examples":["There's a dead tree on my street","My neighbor is building without a permit","How do I get a trash bin?","Pay a parking ticket","Deck permit"],
   "ask.one":"Here's who handles that:","ask.many":"This looks like:",
   "ask.nf.h":"Not sure yet — here's where to start",
@@ -581,6 +622,8 @@ const I18N = { en: { strings: {
   "tools.title":"Public Tools You Can Use",
   "tools.lede":"Free and low-cost public resources most residents don't know exist.",
   "tools.ph":"Search (e.g. tools, passes, gardens)",
+  "tools.label":"Search public resources",
+  "tools.filter":"Filter by category",
   "tools.count":"{n} resources","tools.count1":"1 resource","tools.none":"No public tools match that.",
   "tools.th.resource":"Resource","tools.th.category":"Category","tools.th.what":"What it is","tools.th.cost":"Cost",
   "tools.who":"Who:","tools.how":"How:","tools.access":"How to access",
@@ -613,6 +656,8 @@ const I18N = { en: { strings: {
   "reps.title":"Who Represents You?",
   "reps.lede":"Enter your Portland address to find your city council district, state legislators, and trash &amp; recycling day.",
   "reps.ph":"e.g. 389 Congress St",
+  "reps.label":"Your Portland address",
+  "prop.label":"Portland property address",
   "reps.btn":"Look up",
   "reps.src":"Matched against the City of Portland's official GIS maps — free, nothing stored.",
   "lookup.loading":"Looking up…",
@@ -746,7 +791,7 @@ function renderTabs(){
   document.getElementById("tabs").innerHTML = SECTIONS.filter(s=>s!=="home").map(s=>
     `<button class="${section===s?"active":""}" onclick="go('${s}')">${label(s)}</button>`).join("");
   document.getElementById("crumbs").innerHTML =
-    `<a href="#" onclick="event.preventDefault();go('home')">${label("home")}</a>` +
+    `<a href="#home" onclick="event.preventDefault();go('home')">${label("home")}</a>` +
     (section!=="home"?` &raquo; ${label(section)}`:"");
 }
 
@@ -814,7 +859,7 @@ function askView(){
   let body="";
   if(!askQ.trim()){
     body = `<div class="stack"><p class="small" style="margin-top:12px"><strong>${t("ask.try")}</strong></p>
-      <div class="chips">${tRaw("ask.examples").map(e=>`<button onclick="askQ=${esc(JSON.stringify(e))};render()">${esc(e)}</button>`).join("")}</div></div>`;
+      <div class="chips" role="group" aria-label="${esc(t("ask.examplesLabel"))}">${tRaw("ask.examples").map(e=>`<button type="button" onclick="askQ=${esc(JSON.stringify(e))};render()">${esc(e)}</button>`).join("")}</div></div>`;
   } else if(!results.length){
     body = `<div class="box"><div class="box-hd">${t("ask.nf.h")}</div><div class="box-bd">
       <p>${t("ask.nf.p")}</p>
@@ -824,6 +869,7 @@ function askView(){
     body = `<div class="stack" style="margin-top:10px"><p class="small"><strong>${results.length===1?t("ask.one"):t("ask.many")}</strong></p>${results.map(serviceBox).join("")}</div>`;
   }
   return `<h1>${t("ask.title")}</h1><p class="lede">${t("ask.lede")}</p>
+    <label class="sr-only" for="askQ">${t("ask.label")}</label>
     <input class="field" id="askQ" type="text" placeholder="${esc(t("ask.ph"))}" value="${esc(askQ)}" oninput="askQ=this.value;render(true)">${body}`;
 }
 
@@ -835,8 +881,9 @@ function toolsView(){
     return (toolCat==="All"||x.category===toolCat)&&(!qq||name.toLowerCase().includes(qq)||what.toLowerCase().includes(qq)||x.name.toLowerCase().includes(qq));
   });
   return `<h1>${t("tools.title")}</h1><p class="lede">${t("tools.lede")}</p>
+    <label class="sr-only" for="toolQ">${t("tools.label")}</label>
     <input class="field" id="toolQ" type="search" placeholder="${esc(t("tools.ph"))}" value="${esc(toolQ)}" oninput="toolQ=this.value;render(true)">
-    <div class="chips" style="margin-top:8px">${cats.map(c=>`<button class="${c===toolCat?'active':''}" onclick="toolCat=${esc(JSON.stringify(c))};render()">${t("cat."+c)}</button>`).join("")}</div>
+    <div class="chips" style="margin-top:8px" role="group" aria-label="${esc(t("tools.filter"))}">${cats.map(c=>`<button class="${c===toolCat?'active':''}" aria-pressed="${c===toolCat}" onclick="toolCat=${esc(JSON.stringify(c))};render()">${t("cat."+c)}</button>`).join("")}</div>
     <p class="small">${filtered.length===1?t("tools.count1"):t("tools.count",{n:filtered.length})}</p>
     <table class="itable"><thead><tr><th style="width:180px">${t("tools.th.resource")}</th><th style="width:90px">${t("tools.th.category")}</th><th>${t("tools.th.what")}</th><th style="width:130px">${t("tools.th.cost")}</th><th style="width:90px">&nbsp;</th></tr></thead>
     <tbody>${filtered.length===0?`<tr><td colspan="5"><em>${t("tools.none")}</em></td></tr>`:
@@ -879,12 +926,12 @@ function permitsView(){
     return `<h1>${t("permits.title")}</h1><p class="lede">${t("permits.lede")}</p>
       <div class="notice"><strong>${t("permits.notice.b")}</strong> ${t("permits.notice")}</div>
       <p class="small"><strong>${t("permits.q")}</strong></p>
-      <table class="itable"><tbody>${PERMIT_PROJECTS.map(p=>`<tr><td style="width:160px"><a href="#" onclick="event.preventDefault();permitPick=${esc(JSON.stringify(p.id))};render()"><strong>${esc(df("permits",p.id,"label",p.label))}</strong></a></td><td>${esc(df("permits",p.id,"summary",p.summary))}</td></tr>`).join("")}</tbody></table>`;
+      <table class="itable"><tbody>${PERMIT_PROJECTS.map(p=>`<tr><td style="width:160px"><button type="button" class="linkbtn" onclick="permitPick=${esc(JSON.stringify(p.id))};render()"><strong>${esc(df("permits",p.id,"label",p.label))}</strong></button></td><td>${esc(df("permits",p.id,"summary",p.summary))}</td></tr>`).join("")}</tbody></table>`;
   }
   const p=PERMIT_PROJECTS.find(x=>x.id===permitPick);
   const note=df("permits",p.id,"note",p.note);
   return `<h1>${t("permits.title")}</h1>
-    <p><a href="#" onclick="event.preventDefault();permitPick=null;render()">&laquo; ${t("permits.back")}</a></p>
+    <p><button type="button" class="linkbtn" onclick="permitPick=null;render()">&laquo; ${t("permits.back")}</button></p>
     <div class="box"><div class="box-hd">${esc(df("permits",p.id,"label",p.label))} <span class="badge ${p.level==='yes'?'badge-pending':''}">${p.level==='yes'?t("permits.likely"):t("permits.depends")}</span></div>
     <div class="box-bd"><p><strong>${esc(df("permits",p.id,"verdict",p.verdict))}</strong></p><p>${esc(df("permits",p.id,"summary",p.summary))}</p>
     <h3 style="font-size:12px;font-family:Verdana,sans-serif;text-transform:uppercase;color:#663300;margin-top:12px">${t("permits.involved")}</h3><p>${esc(df("permits",p.id,"details",p.details))}</p>
@@ -959,7 +1006,8 @@ async function lookupReps(e){
 function repsView(){
   return `<h1>${t("reps.title")}</h1><p class="lede">${t("reps.lede")}</p>
     <form onsubmit="lookupReps(event)"><table style="width:100%"><tbody><tr>
-      <td style="padding-right:6px"><input class="field" id="repAddr" type="text" placeholder="${esc(t("reps.ph"))}" autocomplete="street-address"></td>
+      <td style="padding-right:6px"><label class="sr-only" for="repAddr">${t("reps.label")}</label>
+        <input class="field" id="repAddr" type="text" placeholder="${esc(t("reps.ph"))}" autocomplete="street-address"></td>
       <td style="width:100px"><button class="btn btn-primary" type="submit" style="width:100%;padding:5px 10px">${t("reps.btn")}</button></td>
     </tr></tbody></table></form>
     <p class="small">${t("reps.src")}</p>
@@ -1035,7 +1083,8 @@ async function lookupProperty(e){
 function propertyView(){
   return `<h1>${t("prop.title")}</h1><p class="lede">${t("prop.lede")}</p>
     <form onsubmit="lookupProperty(event)"><table style="width:100%"><tbody><tr>
-      <td style="padding-right:6px"><input class="field" id="propAddr" type="text" placeholder="${esc(t("reps.ph"))}" autocomplete="street-address"></td>
+      <td style="padding-right:6px"><label class="sr-only" for="propAddr">${t("prop.label")}</label>
+        <input class="field" id="propAddr" type="text" placeholder="${esc(t("reps.ph"))}" autocomplete="street-address"></td>
       <td style="width:100px"><button class="btn btn-primary" type="submit" style="width:100%;padding:5px 10px">${t("reps.btn")}</button></td>
     </tr></tbody></table></form>
     <p class="small">${t("prop.src")}</p>
