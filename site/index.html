@@ -49,11 +49,25 @@ img { border: 0; }
   color: #cfd8e6;
   font-size: 10px;
   padding: 3px 12px;
-  text-align: right;
   border-bottom: 1px solid #001f3f;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
 }
 .topbar a { color: #ffffff; text-decoration: none; margin-left: 12px; }
 .topbar a:hover { text-decoration: underline; }
+.langbox { white-space: nowrap; }
+.langbox select {
+  background: #002a52;
+  color: #fff;
+  border: 1px solid #4a6a94;
+  font-family: Verdana, sans-serif;
+  font-size: 10px;
+  padding: 1px 2px;
+  cursor: pointer;
+}
+.langbox select:focus { outline: 2px solid #f0b429; }
 
 /* -------- masthead -------- */
 .masthead {
@@ -92,7 +106,9 @@ img { border: 0; }
   background-image: linear-gradient(to bottom, #f0f4f8, #cfd8e2);
   border-bottom: 2px solid #1e4e8c;
   padding: 0 10px;
-  height: 30px;
+  /* Auto height so longer translated labels can wrap to a second row
+     instead of overflowing onto the breadcrumb. */
+  min-height: 30px;
 }
 .tabs button {
   display: inline-block;
@@ -350,19 +366,22 @@ input.field:focus { outline: 1px solid #1e4e8c; }
 <body>
 <div class="site">
   <div class="topbar">
-    <span>An independent civic guide · Portland, Maine</span>
-    <a href="https://www.portlandmaine.gov/" target="_blank" rel="noopener">portlandmaine.gov</a>
-    <a href="https://seeclickfix.com/portland_2/report" target="_blank" rel="noopener">Portland 311</a>
+    <span class="langbox"><span aria-hidden="true">🌐</span> <select id="langSel" onchange="setLang(this.value)" aria-label="Language"></select></span>
+    <span>
+      <span id="tagline">An independent civic guide · Portland, Maine</span>
+      <a href="https://www.portlandmaine.gov/" target="_blank" rel="noopener">portlandmaine.gov</a>
+      <a href="https://seeclickfix.com/portland_2/report" target="_blank" rel="noopener">Portland 311</a>
+    </span>
   </div>
   <div class="masthead">
     <button class="masthead-title" onclick="go('home')">Portland Problems
-      <span class="masthead-sub">Get your Portland, Maine problem to the right place — fast.</span>
+      <span class="masthead-sub" id="mastheadSub">Get your Portland, Maine problem to the right place — fast.</span>
     </button>
   </div>
   <div class="tabs" id="tabs"></div>
   <div class="crumbs" id="crumbs"></div>
   <div class="content" id="content"></div>
-  <div class="footer">
+  <div class="footer" id="footer">
     <p><strong>Not an official City of Portland website.</strong> Independent guide pointing to real city services. Always confirm details with the city.</p>
     <p>Official site: <a href="https://www.portlandmaine.gov/" target="_blank" rel="noopener">portlandmaine.gov</a> · Report a problem: <a href="https://seeclickfix.com/portland_2/report" target="_blank" rel="noopener">Portland 311</a></p>
     <p class="small">&copy; 2026 Portland Problems · Last updated July 22, 2026 · <a href="#about" onclick="event.preventDefault();go('about')">About this site</a></p>
@@ -473,9 +492,12 @@ const ZONES = {
   "EWPZ":["Eastern Waterfront Port Zone","Eastern waterfront port district."]
 };
 function zoneInfo(z){
+  const d = I18N[lang] && I18N[lang].data;
+  const loc = d && d.zones && d.zones[z];
+  if(loc) return {name:loc[0], blurb:loc[1]};
   const e = ZONES[z];
   return e ? {name:e[0], blurb:e[1]}
-           : {name:"See the Land Use Code", blurb:"This district's purpose and standards are defined in the Land Use Code."};
+           : {name:t("zone.fb.name"), blurb:t("zone.fb.blurb")};
 }
 // "027  C012001" -> "27-C-12" (chart-block-lot; trailing 3 digits are the sub-lot)
 function fmtCBL(ias){
@@ -500,13 +522,217 @@ const CITYWIDE = [
   {role:"At-Large", name:"April Fournier",email:"afournier@portlandmaine.gov"}
 ];
 
-const SECTIONS = [
-  {id:"home",label:"Home"},{id:"ask",label:"Ask & Route"},{id:"property",label:"My Property"},
-  {id:"tools",label:"Public Tools"},{id:"report",label:"Report an Issue"},{id:"permits",label:"Permits"},
-  {id:"meetings",label:"Meetings"},{id:"reps",label:"Your Reps"},{id:"about",label:"About"}
-];
-const LABEL = Object.fromEntries(SECTIONS.map(s=>[s.id,s.label]));
 const esc = s => String(s??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ==================== i18n ====================
+   All user-facing text lives in string dictionaries. English is inline (the
+   fallback); other languages load lazily from i18n/<lang>.js, which sets
+   I18N.<lang> = { strings:{...}, data:{...} }. `t(key)` resolves UI strings,
+   `df(set,id,field)` resolves translated fields of the content datasets
+   (SERVICES, TOOLS, PERMIT_PROJECTS, MEETINGS, ISSUES, ZONES). Anything a
+   translation file doesn't cover falls back to English automatically. */
+const LANGS = {en:"English", es:"Español", pt:"Português", fr:"Français"};
+const LOCALES = {en:"en-US", es:"es", pt:"pt", fr:"fr"};
+const I18N = { en: { strings: {
+  "lang.label":"Language",
+  "meta.title":"Portland Problems — Portland, Maine Civic Guide",
+  "meta.desc":"A plain-language guide to getting things done in Portland, Maine: report issues, permits, meetings, and find your reps.",
+  "topbar.tagline":"An independent civic guide · Portland, Maine",
+  "masthead.sub":"Get your Portland, Maine problem to the right place — fast.",
+  "nav.home":"Home","nav.ask":"Ask & Route","nav.property":"My Property","nav.tools":"Public Tools",
+  "nav.report":"Report an Issue","nav.permits":"Permits","nav.meetings":"Meetings","nav.reps":"Your Reps","nav.about":"About",
+  "footer.unofficial":"Not an official City of Portland website.",
+  "footer.body":"Independent guide pointing to real city services. Always confirm details with the city.",
+  "footer.official":"Official site:","footer.report":"Report a problem:",
+  "footer.updated":"Last updated July 22, 2026","footer.about":"About this site",
+  "home.title":"Welcome",
+  "home.lede":"Portland Problems is a plain-language guide to city rules and services in Portland, Maine. Zoning codes, permit requirements, and planning decisions are usually written for staff and lawyers &mdash; this site translates them into everyday English so residents can actually use them.",
+  "home.p1":"Use it to understand what you can build on a property, whether a project needs a permit, how the city's zoning applies to your address, and where to find the planning information behind local decisions. Every answer links straight to the real city service or record, so there's no jargon and no dead ends.",
+  "home.heroAlt":"Aerial view of Portland, Maine — the Cathedral of the Immaculate Conception with Casco Bay beyond",
+  "home.heroCap":"Portland. Simple, the way the internet should be.",
+  "home.p2":"Pick a section below to get started. Whether you're planning a renovation, following a planning-board meeting, reporting a problem, or looking up who represents you, the goal is the same: clearer answers and less runaround.",
+  "home.desc.property":"Type an address to see its zoning district in plain English, historic-district status, and its parcel and tax records.",
+  "home.desc.ask":"Describe your problem in plain words and get sent to the exact city service that handles it.",
+  "home.desc.tools":"Free and low-cost resources most residents don't know exist — things to borrow, places to go.",
+  "home.desc.report":"See what neighbors have reported to 311 on a map, and report a pothole, light, or hazard.",
+  "home.desc.permits":"\"Do I even need a permit?\" — a plain-language read on your project, plus where to apply.",
+  "home.desc.meetings":"Upcoming City Council and board meetings explained, with how and when to submit public comment.",
+  "home.desc.reps":"Type your address to find your council district, state legislators, and trash day.",
+  "home.creator.h":"About the Creator",
+  "home.creator.p":"Omari Brent &mdash; senior at the Waynflete School. I built this site (back-end support from Claude Code) because I was tired of digging through unorganized government websites. I hope it serves as a helpful tool that encourages civic engagement.",
+  "home.creator.contact":"Questions or suggestions? Please reach out!",
+  "home.ann.h":"Announcements",
+  "home.ann.1":"Winter parking ban runs Nov 1 – Apr 15.",
+  "home.ann.2":"City Council meets Mon, Jul 27 at 5 PM.",
+  "home.ann.3":"Bulky-item pickup permits available online.",
+  "home.quick.h":"Quick Links","home.quick.zoning":"Look Up Your Zoning","home.quick.pothole":"Report a Pothole",
+  "home.quick.ticket":"Pay a Parking Ticket","home.quick.trash":"Trash &amp; Recycling","home.quick.permit":"Permit Portal",
+  "home.cityhall.h":"Contact City Hall",
+  "ask.title":"What do you need?",
+  "ask.lede":"Describe your problem in plain words. We'll explain it, name the city department that handles it, and give you the exact next step.",
+  "ask.ph":"e.g. there's a pothole on my street",
+  "ask.try":"Try one of these:",
+  "ask.examples":["There's a dead tree on my street","My neighbor is building without a permit","How do I get a trash bin?","Pay a parking ticket","Deck permit"],
+  "ask.one":"Here's who handles that:","ask.many":"This looks like:",
+  "ask.nf.h":"Not sure yet — here's where to start",
+  "ask.nf.p":"We couldn't match that. To report a neighborhood problem, use Portland 311. Otherwise, browse city departments.",
+  "ask.nf.btn":"Report on 311","ask.nf.browse":"Browse all departments",
+  "ask.handled":"Handled by:",
+  "tools.title":"Public Tools You Can Use",
+  "tools.lede":"Free and low-cost public resources most residents don't know exist.",
+  "tools.ph":"Search (e.g. tools, passes, gardens)",
+  "tools.count":"{n} resources","tools.count1":"1 resource","tools.none":"No public tools match that.",
+  "tools.th.resource":"Resource","tools.th.category":"Category","tools.th.what":"What it is","tools.th.cost":"Cost",
+  "tools.who":"Who:","tools.how":"How:","tools.access":"How to access",
+  "cat.All":"All","cat.Borrow":"Borrow","cat.Get Around":"Get Around","cat.Outdoors":"Outdoors",
+  "cat.Waste & Recycling":"Waste &amp; Recycling","cat.Get Involved":"Get Involved","cat.Spaces":"Spaces",
+  "report.title":"Report &amp; Track Issues",
+  "report.lede":"See what neighbors have recently reported to 311, and report something new.",
+  "report.new":"Report a New Issue",
+  "report.notice.b":"Showing sample data.","report.notice":"Mock entries; SeeClickFix's API blocks browser requests without a server proxy.",
+  "report.recent":"{n} recent open issues",
+  "report.th.type":"Type","report.th.status":"Status","report.th.desc":"Description","report.th.loc":"Location","report.th.when":"When",
+  "report.view":"View","report.viewOn":"View on SeeClickFix",
+  "status.Open":"Open","status.Acknowledged":"Acknowledged",
+  "itype.Pothole":"Pothole","itype.Street Light":"Street Light","itype.Graffiti":"Graffiti","itype.Illegal Dumping":"Illegal Dumping",
+  "itype.Traffic Sign":"Traffic Sign","itype.Sidewalk":"Sidewalk","itype.Tree":"Tree","itype.Storm Drain":"Storm Drain",
+  "time.m":"{n}m ago","time.h":"{n}h ago","time.d":"{n}d ago",
+  "permits.title":"Do I Even Need a Permit?",
+  "permits.lede":"Pick what you're planning for a plain-language read on whether a permit is likely, what to prepare, and where to apply.",
+  "permits.notice.b":"Guidance, not an official determination.",
+  "permits.notice":"Only the City of Portland Permitting &amp; Inspections Department can confirm.",
+  "permits.q":"What are you planning?",
+  "permits.back":"Choose a different project",
+  "permits.likely":"Permit likely","permits.depends":"It depends",
+  "permits.involved":"What's involved","permits.checklist":"Checklist","permits.timeline":"Rough timeline:",
+  "permits.start":"Start in Citizen Self Service",
+  "meetings.title":"City Meetings, in Plain English",
+  "meetings.lede":"What's coming up at City Council and its boards — what each meeting is, why it matters, and how to have your say.",
+  "meetings.notice.b":"Sample schedule.","meetings.confirm":"Confirm on the","meetings.portal":"official meetings portal",
+  "meetings.why":"Why it matters:","meetings.say":"Have your say:","meetings.deadline":"Deadline:","meetings.agenda":"View the agenda",
+  "reps.title":"Who Represents You?",
+  "reps.lede":"Enter your Portland address to find your city council district, state legislators, and trash &amp; recycling day.",
+  "reps.ph":"e.g. 389 Congress St",
+  "reps.btn":"Look up",
+  "reps.src":"Matched against the City of Portland's official GIS maps — free, nothing stored.",
+  "lookup.loading":"Looking up…",
+  "err.addr":"We couldn't find that address. Try more detail, e.g. '123 Congress St, Portland, ME'.",
+  "err.outside":"That address ({addr}) doesn't appear to be inside Portland.",
+  "err.generic":"Something went wrong.",
+  "reps.matched":"Matched address: {addr}",
+  "reps.councilor.h":"Your District Councilor",
+  "reps.district":"City Council &middot; District {n}",
+  "reps.districtLong":"City Council &mdash; District {n}",
+  "reps.see":"See your councilor on the City Council page",
+  "reps.citywide.h":"Citywide Representatives",
+  "reps.citywide.p":"The Mayor and three At-Large councilors represent every resident of Portland.",
+  "role.Mayor":"Mayor","role.At-Large":"At-Large",
+  "reps.senate":"Maine State Senate","reps.house":"Maine House of Representatives",
+  "reps.distN":"District {n}",
+  "reps.seeSen":"See senator","reps.seeRep":"See representative",
+  "reps.trash":"Trash &amp; recycling day","reps.details":"Details",
+  "reps.state.h":"State &amp; City Services",
+  "reps.foot":"District boundaries come straight from the city's official GIS maps. Councilor contacts reflect the current City Council roster &mdash; confirm on the <a href=\"{url}\" target=\"_blank\" rel=\"noopener\">City Council page</a>.",
+  "prop.title":"What Can I Do With My Property?",
+  "prop.lede":"Type a Portland address to see its zoning district in plain English, whether it's in a historic district, and where its official parcel and tax records live.",
+  "prop.src":"Live from the City of Portland's official GIS &mdash; free, nothing stored.",
+  "err.parcel":"That address ({addr}) doesn't appear to land on a Portland tax parcel. Try the street address without an apartment or unit number.",
+  "prop.snapshot":"Property Snapshot",
+  "prop.zone":"Zone","prop.zoneNA":"Not available for this parcel",
+  "prop.means":"What that means",
+  "prop.meansTail":"Exact height, setback, and lot-coverage standards for {zone} are in the Land Use Code &mdash; open it below.",
+  "prop.hist":"Historic district",
+  "prop.histYes":"<strong>Yes</strong> &mdash; {name} local historic district (exterior changes need Historic Preservation review)",
+  "prop.no":"No",
+  "prop.councilD":"Council district",
+  "prop.cbl":"Parcel (CBL)","prop.cblNote":"&mdash; chart-block-lot; use this to search city records",
+  "prop.landUse":"Land use (assessor)","prop.lot":"Lot size","prop.sqft":"sq ft","prop.year":"Year built",
+  "prop.units":"Units","prop.stories":"Stories","prop.overlays":"Overlays",
+  "prop.shore":"Shoreland overlay applies (extra water-protection rules)",
+  "prop.overlayZ":"Overlay zoning: {v}",
+  "prop.readRules":"Read the Zoning Rules","prop.gisMap":"View GIS Zoning Map","prop.taxRecord":"Property Tax Record",
+  "prop.cblOr":"CBL <strong>{cbl}</strong> or ",
+  "prop.assessorNote":"On the assessor site, search {cblpart}the street address. Zoning questions? Contact <a href=\"{url}\" target=\"_blank\" rel=\"noopener\">Zoning Administration</a>.",
+  "prop.guidance.b":"Guidance, not an official determination.",
+  "prop.guidance":"Zoning, historic, and parcel data come live from the City of Portland's GIS. Confirm anything important with Zoning Administration before you buy or build.",
+  "zone.fb.name":"See the Land Use Code",
+  "zone.fb.blurb":"This district's purpose and standards are defined in the Land Use Code.",
+  "about.title":"About Portland Problems",
+  "about.lede":"Portland Problems is an <strong>unofficial, independent civic resource</strong> for Portland, Maine. It is not run by, endorsed by, or affiliated with the City of Portland. Its only job is to translate city rules and services into plain English and point you to the real, official place to act.",
+  "about.notice.b":"Official information takes precedence.",
+  "about.notice":"If anything on this site conflicts with the City of Portland's own websites, ordinances, or staff, the city is right and this site is wrong. Always confirm important details with the city before you rely on them.",
+  "about.src.h":"Where the data comes from",
+  "about.src.1":"<strong>City of Portland GIS</strong> (gis.portlandmaine.gov) — zoning districts, parcels, council districts, state legislative districts, historic districts, and trash routes, queried live when you look up an address.",
+  "about.src.2":"<strong>OpenStreetMap / Nominatim</strong> — turns the address you type into map coordinates.",
+  "about.src.3":"<strong>City of Portland web pages</strong> — service links, permits, and department information.",
+  "about.src.4":"<strong>Portland Public Library, SeeClickFix (Portland 311), Maine Legislature</strong> — linked directly for passes, issue reporting, and legislator lookups.",
+  "about.src.5":"<strong>Sample data:</strong> the 311 issue map and the meeting schedule are clearly-labeled examples, not live feeds.",
+  "about.upd.h":"How often it's updated",
+  "about.upd.p":"Address lookups (zoning, districts, trash day) come <strong>live from the city's GIS</strong> every time you search. Curated content — links, councilor contacts, permit guidance — is checked by hand; the last full link audit was <strong>July 2026</strong>. Found something stale? Check the official site and trust it over this one.",
+  "about.priv.h":"Privacy",
+  "about.priv.p":"No accounts, no cookies, no analytics, no tracking. Addresses you type are sent directly from your browser to OpenStreetMap (to find coordinates) and the City of Portland's GIS (to find your districts) — this site has no server and <strong>never sees or stores anything you enter</strong>.",
+  "about.official.h":"Official City of Portland resources",
+  "about.off.1":"the official city website",
+  "about.off.2":"report an issue",
+  "about.off.3":"permits &amp; licenses",
+  "about.off.4":"Meetings &amp; agendas portal",
+  "about.off.5":"Assessor property search"
+}}};
+
+let lang = "en";
+try{ const saved = localStorage.getItem("pp_lang"); if(saved && LANGS[saved]) lang = saved; }catch{}
+
+function tRaw(key){
+  const cur = I18N[lang] && I18N[lang].strings;
+  const v = cur && Object.prototype.hasOwnProperty.call(cur,key) ? cur[key] : I18N.en.strings[key];
+  return v !== undefined ? v : key;
+}
+function t(key,params){
+  let s = tRaw(key);
+  if(typeof s !== "string") return s;
+  if(params) for(const k in params) s = s.split("{"+k+"}").join(params[k]);
+  return s;
+}
+// Translated field of a content-dataset entry; falls back to the English value.
+function df(set,id,field,fallback){
+  const d = I18N[lang] && I18N[lang].data;
+  const v = d && d[set] && d[set][id] && d[set][id][field];
+  return v !== undefined ? v : fallback;
+}
+function setLang(l){
+  if(!LANGS[l]) l = "en";
+  lang = l;
+  try{ localStorage.setItem("pp_lang",l); }catch{}
+  if(l !== "en" && !I18N[l]){
+    const s = document.createElement("script");
+    s.src = "i18n/"+l+".js";
+    s.onload = applyLang;
+    s.onerror = applyLang; // graceful English fallback if the file can't load
+    document.head.appendChild(s);
+  } else applyLang();
+}
+function applyLang(){
+  document.documentElement.lang = lang;
+  document.title = t("meta.title");
+  const md = document.querySelector('meta[name="description"]');
+  if(md) md.setAttribute("content", t("meta.desc"));
+  renderChrome();
+  render();
+}
+function renderChrome(){
+  const sel = document.getElementById("langSel");
+  sel.innerHTML = Object.keys(LANGS).map(k=>`<option value="${k}"${k===lang?" selected":""}>${LANGS[k]}</option>`).join("");
+  sel.setAttribute("aria-label", t("lang.label"));
+  document.getElementById("tagline").textContent = t("topbar.tagline");
+  document.getElementById("mastheadSub").textContent = t("masthead.sub");
+  document.getElementById("footer").innerHTML =
+    `<p><strong>${t("footer.unofficial")}</strong> ${t("footer.body")}</p>
+     <p>${t("footer.official")} <a href="https://www.portlandmaine.gov/" target="_blank" rel="noopener">portlandmaine.gov</a> · ${t("footer.report")} <a href="https://seeclickfix.com/portland_2/report" target="_blank" rel="noopener">Portland 311</a></p>
+     <p class="small">&copy; 2026 Portland Problems · ${t("footer.updated")} · <a href="#about" onclick="event.preventDefault();go('about')">${t("footer.about")}</a></p>`;
+}
+
+const SECTIONS = ["home","ask","property","tools","report","permits","meetings","reps","about"];
+const label = id => t("nav."+id);
 
 let section = "home";
 let permitPick = null;
@@ -517,161 +743,168 @@ let askQ = "";
 function go(s){ location.hash = s==="home"?"":s; window.scrollTo(0,0); }
 
 function renderTabs(){
-  document.getElementById("tabs").innerHTML = SECTIONS.filter(s=>s.id!=="home").map(s=>
-    `<button class="${section===s.id?"active":""}" onclick="go('${s.id}')">${s.label}</button>`).join("");
+  document.getElementById("tabs").innerHTML = SECTIONS.filter(s=>s!=="home").map(s=>
+    `<button class="${section===s?"active":""}" onclick="go('${s}')">${label(s)}</button>`).join("");
   document.getElementById("crumbs").innerHTML =
-    `<a href="#" onclick="event.preventDefault();go('home')">Home</a>` +
-    (section!=="home"?` &raquo; ${LABEL[section]}`:"");
+    `<a href="#" onclick="event.preventDefault();go('home')">${label("home")}</a>` +
+    (section!=="home"?` &raquo; ${label(section)}`:"");
 }
 
-const HOME_ITEMS = [
-  ["property","My Property","Type an address to see its zoning district in plain English, historic-district status, and its parcel and tax records."],
-  ["ask","Ask & Route","Describe your problem in plain words and get sent to the exact city service that handles it."],
-  ["tools","Public Tools","Free and low-cost resources most residents don't know exist — things to borrow, places to go."],
-  ["report","Report an Issue","See what neighbors have reported to 311 on a map, and report a pothole, light, or hazard."],
-  ["permits","Permits","\"Do I even need a permit?\" — a plain-language read on your project, plus where to apply."],
-  ["meetings","Meetings","Upcoming City Council and board meetings explained, with how and when to submit public comment."],
-  ["reps","Your Reps","Type your address to find your council district, state legislators, and trash day."]
-];
+const HOME_IDS = ["property","ask","tools","report","permits","meetings","reps"];
 
 function homeView(){
   return `<div class="two-col"><div class="main">
-    <h1>Welcome</h1>
-    <p class="lede">Portland Problems is a plain-language guide to city rules and services in Portland, Maine. Zoning codes, permit requirements, and planning decisions are usually written for staff and lawyers &mdash; this site translates them into everyday English so residents can actually use them.</p>
-    <p>Use it to understand what you can build on a property, whether a project needs a permit, how the city's zoning applies to your address, and where to find the planning information behind local decisions. Every answer links straight to the real city service or record, so there's no jargon and no dead ends.</p>
-    <div class="hero"><img src="portland.jpg" alt="Aerial view of Portland, Maine — the Cathedral of the Immaculate Conception with Casco Bay beyond" width="660" height="441"><div class="hero-cap">Portland. Simple, the way the internet should be.</div></div>
-    <p>Pick a section below to get started. Whether you're planning a renovation, following a planning-board meeting, reporting a problem, or looking up who represents you, the goal is the same: clearer answers and less runaround.</p>
-    <table class="indexlist"><tbody>${HOME_ITEMS.map(([id,t,d])=>
-      `<tr><td class="icon">&raquo;</td><td><a class="title" href="#${id}" onclick="event.preventDefault();go('${id}')">${t}</a><div class="desc">${d}</div></td></tr>`).join("")}
+    <h1>${t("home.title")}</h1>
+    <p class="lede">${t("home.lede")}</p>
+    <p>${t("home.p1")}</p>
+    <div class="hero"><img src="portland.jpg" alt="${esc(t("home.heroAlt"))}" width="660" height="441"><div class="hero-cap">${t("home.heroCap")}</div></div>
+    <p>${t("home.p2")}</p>
+    <table class="indexlist"><tbody>${HOME_IDS.map(id=>
+      `<tr><td class="icon">&raquo;</td><td><a class="title" href="#${id}" onclick="event.preventDefault();go('${id}')">${label(id)}</a><div class="desc">${t("home.desc."+id)}</div></td></tr>`).join("")}
     </tbody></table></div>
     <div class="side">
-      <div class="sidebox"><h3>About the Creator</h3>
-        <p style="margin:0 0 6px">Omari Brent &mdash; senior at the Waynflete School. I built this site (back-end support from Claude Code) because I was tired of digging through unorganized government websites. I hope it serves as a helpful tool that encourages civic engagement.</p>
+      <div class="sidebox"><h3>${t("home.creator.h")}</h3>
+        <p style="margin:0 0 6px">${t("home.creator.p")}</p>
         <ul>
           <li><a href="mailto:ohutchb@gmail.com">ohutchb@gmail.com</a></li>
           <li><a href="https://www.linkedin.com/in/omari-brent-836542364" target="_blank" rel="noopener">LinkedIn</a></li>
         </ul>
-        <p class="small" style="margin:6px 0 0">Questions or suggestions? Please reach out!</p>
+        <p class="small" style="margin:6px 0 0">${t("home.creator.contact")}</p>
       </div>
-      <div class="sidebox"><h3>Announcements</h3><ul><li>Winter parking ban runs Nov 1 – Apr 15.</li><li>City Council meets Mon, Jul 27 at 5 PM.</li><li>Bulky-item pickup permits available online.</li></ul></div>
-      <div class="sidebox"><h3>Quick Links</h3><ul>
-        <li><a href="#property" onclick="event.preventDefault();go('property')">Look Up Your Zoning</a></li>
-        <li><a href="https://seeclickfix.com/portland_2/report" target="_blank" rel="noopener">Report a Pothole</a></li>
-        <li><a href="https://portlandme.rmcpay.com/" target="_blank" rel="noopener">Pay a Parking Ticket</a></li>
-        <li><a href="https://www.portlandmaine.gov/trash-recycling" target="_blank" rel="noopener">Trash &amp; Recycling</a></li>
-        <li><a href="https://selfservice.portlandmaine.gov/EnerGov_Prod/SelfService#/home" target="_blank" rel="noopener">Permit Portal</a></li></ul></div>
-      <div class="sidebox"><h3>Contact City Hall</h3><ul><li>389 Congress Street</li><li>Portland, ME 04101</li><li>(207) 874-8300</li></ul></div>
+      <div class="sidebox"><h3>${t("home.ann.h")}</h3><ul><li>${t("home.ann.1")}</li><li>${t("home.ann.2")}</li><li>${t("home.ann.3")}</li></ul></div>
+      <div class="sidebox"><h3>${t("home.quick.h")}</h3><ul>
+        <li><a href="#property" onclick="event.preventDefault();go('property')">${t("home.quick.zoning")}</a></li>
+        <li><a href="https://seeclickfix.com/portland_2/report" target="_blank" rel="noopener">${t("home.quick.pothole")}</a></li>
+        <li><a href="https://portlandme.rmcpay.com/" target="_blank" rel="noopener">${t("home.quick.ticket")}</a></li>
+        <li><a href="https://www.portlandmaine.gov/trash-recycling" target="_blank" rel="noopener">${t("home.quick.trash")}</a></li>
+        <li><a href="https://selfservice.portlandmaine.gov/EnerGov_Prod/SelfService#/home" target="_blank" rel="noopener">${t("home.quick.permit")}</a></li></ul></div>
+      <div class="sidebox"><h3>${t("home.cityhall.h")}</h3><ul><li>389 Congress Street</li><li>Portland, ME 04101</li><li>(207) 874-8300</li></ul></div>
     </div></div>`;
 }
 
-const STOP = {the:1,a:1,an:1,and:1,or:1,of:1,to:1,in:1,on:1,my:1,is:1,for:1,how:1,do:1,i:1,get:1,with:1,there:1,s:1};
-function tokenize(q){return (q.toLowerCase().match(/[a-z0-9]+/g)||[]).filter(t=>t.length>2&&!STOP[t]);}
+const STOP = {the:1,a:1,an:1,and:1,or:1,of:1,to:1,in:1,on:1,my:1,is:1,for:1,how:1,do:1,i:1,get:1,with:1,there:1,s:1,
+  el:1,la:1,los:1,las:1,un:1,una:1,de:1,del:1,en:1,mi:1,es:1,por:1,que:1,hay:1,como:1,
+  le:1,les:1,une:1,des:1,du:1,est:1,mon:1,ma:1,il:1,je:1,pour:1,dans:1,
+  o:1,os:1,as:1,um:1,uma:1,da:1,no:1,na:1,meu:1,minha:1,para:1,tem:1};
+function tokenize(q){return (q.toLowerCase().match(/[a-z0-9À-ɏ]+/g)||[]).filter(t=>t.length>2&&!STOP[t]);}
 function routeQuery(q){
   const toks=tokenize(q); if(!toks.length) return [];
   return SERVICES.map(s=>{
-    const kws=s.keywords.map(k=>k.toLowerCase());
-    const hay=(s.title+" "+s.explanation+" "+s.department).toLowerCase();
+    // English keywords plus any keywords the active translation adds.
+    const extra=df("services",s.id,"keywords",[]);
+    const kws=s.keywords.concat(extra).map(k=>k.toLowerCase());
+    const hay=(df("services",s.id,"title",s.title)+" "+df("services",s.id,"explanation",s.explanation)+" "+
+      s.title+" "+s.explanation+" "+s.department).toLowerCase();
     let score=0;
     toks.forEach(t=>{
       const hit=kws.some(k=>k===t||(t.length>=4&&k.indexOf(t)>=0));
-      if(hit) score+=3; else if(new RegExp("\\b"+t+"\\b").test(hay)) score+=1;
+      if(hit) score+=3; else if(hay.indexOf(t)>=0&&t.length>=4) score+=1;
     });
     return {s,score};
   }).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,3).map(x=>x.s);
 }
-const EXAMPLES=["There's a dead tree on my street","My neighbor is building without a permit","How do I get a trash bin?","Pay a parking ticket","Deck permit"];
 
 function serviceBox(s){
-  return `<div class="box"><div class="box-hd">${esc(s.title)}</div><div class="box-bd">
-    <p>${esc(s.explanation)}</p><p class="small"><strong>Handled by:</strong> ${esc(s.department)}</p>
-    <a class="btn btn-primary" href="${s.actionUrl}" target="_blank" rel="noopener">${esc(s.actionLabel)} &raquo;</a></div></div>`;
+  return `<div class="box"><div class="box-hd">${esc(df("services",s.id,"title",s.title))}</div><div class="box-bd">
+    <p>${esc(df("services",s.id,"explanation",s.explanation))}</p><p class="small"><strong>${t("ask.handled")}</strong> ${esc(df("services",s.id,"department",s.department))}</p>
+    <a class="btn btn-primary" href="${s.actionUrl}" target="_blank" rel="noopener">${esc(df("services",s.id,"actionLabel",s.actionLabel))} &raquo;</a></div></div>`;
 }
 function askView(){
   const results = routeQuery(askQ);
   let body="";
   if(!askQ.trim()){
-    body = `<div class="stack"><p class="small" style="margin-top:12px"><strong>Try one of these:</strong></p>
-      <div class="chips">${EXAMPLES.map(e=>`<button onclick="askQ=${JSON.stringify(e)};render()">${esc(e)}</button>`).join("")}</div></div>`;
+    body = `<div class="stack"><p class="small" style="margin-top:12px"><strong>${t("ask.try")}</strong></p>
+      <div class="chips">${tRaw("ask.examples").map(e=>`<button onclick="askQ=${esc(JSON.stringify(e))};render()">${esc(e)}</button>`).join("")}</div></div>`;
   } else if(!results.length){
-    body = `<div class="box"><div class="box-hd">Not sure yet — here's where to start</div><div class="box-bd">
-      <p>We couldn't match that. To report a neighborhood problem, use Portland 311. Otherwise, browse city departments.</p>
-      <p><a class="btn btn-primary" href="https://seeclickfix.com/portland_2/report" target="_blank" rel="noopener">Report on 311 &raquo;</a>
-      <a href="https://www.portlandmaine.gov/departments" target="_blank" rel="noopener">Browse all departments</a></p></div></div>`;
+    body = `<div class="box"><div class="box-hd">${t("ask.nf.h")}</div><div class="box-bd">
+      <p>${t("ask.nf.p")}</p>
+      <p><a class="btn btn-primary" href="https://seeclickfix.com/portland_2/report" target="_blank" rel="noopener">${t("ask.nf.btn")} &raquo;</a>
+      <a href="https://www.portlandmaine.gov/departments" target="_blank" rel="noopener">${t("ask.nf.browse")}</a></p></div></div>`;
   } else {
-    body = `<div class="stack" style="margin-top:10px"><p class="small"><strong>${results.length===1?"Here's who handles that:":"This looks like:"}</strong></p>${results.map(serviceBox).join("")}</div>`;
+    body = `<div class="stack" style="margin-top:10px"><p class="small"><strong>${results.length===1?t("ask.one"):t("ask.many")}</strong></p>${results.map(serviceBox).join("")}</div>`;
   }
-  return `<h1>What do you need?</h1><p class="lede">Describe your problem in plain words. We'll explain it, name the city department that handles it, and give you the exact next step.</p>
-    <input class="field" id="askQ" type="text" placeholder="e.g. there's a pothole on my street" value="${esc(askQ)}" oninput="askQ=this.value;render(true)">${body}`;
+  return `<h1>${t("ask.title")}</h1><p class="lede">${t("ask.lede")}</p>
+    <input class="field" id="askQ" type="text" placeholder="${esc(t("ask.ph"))}" value="${esc(askQ)}" oninput="askQ=this.value;render(true)">${body}`;
 }
 
 function toolsView(){
-  const cats=["All"]; TOOLS.forEach(t=>{if(!cats.includes(t.category))cats.push(t.category);});
+  const cats=["All"]; TOOLS.forEach(x=>{if(!cats.includes(x.category))cats.push(x.category);});
   const qq=toolQ.trim().toLowerCase();
-  const filtered = TOOLS.filter(t=>(toolCat==="All"||t.category===toolCat)&&(!qq||t.name.toLowerCase().includes(qq)||t.whatItIs.toLowerCase().includes(qq)));
-  return `<h1>Public Tools You Can Use</h1><p class="lede">Free and low-cost public resources most residents don't know exist.</p>
-    <input class="field" id="toolQ" type="search" placeholder="Search (e.g. tools, passes, gardens)" value="${esc(toolQ)}" oninput="toolQ=this.value;render(true)">
-    <div class="chips" style="margin-top:8px">${cats.map(c=>`<button class="${c===toolCat?'active':''}" onclick="toolCat=${JSON.stringify(c)};render()">${esc(c)}</button>`).join("")}</div>
-    <p class="small">${filtered.length} ${filtered.length===1?'resource':'resources'}</p>
-    <table class="itable"><thead><tr><th style="width:180px">Resource</th><th style="width:90px">Category</th><th>What it is</th><th style="width:130px">Cost</th><th style="width:90px">&nbsp;</th></tr></thead>
-    <tbody>${filtered.length===0?'<tr><td colspan="5"><em>No public tools match that.</em></td></tr>':
-      filtered.map(t=>`<tr><td><strong>${esc(t.name)}</strong><div class="small">${esc(t.location)}</div></td>
-        <td>${esc(t.category)}</td>
-        <td>${esc(t.whatItIs)}<div class="small" style="margin-top:4px"><strong>Who:</strong> ${esc(t.whoItsFor)}</div><div class="small"><strong>How:</strong> ${esc(t.howToAccess)}</div></td>
-        <td>${esc(t.cost)}</td><td><a class="btn" href="${t.url}" target="_blank" rel="noopener">How to access &raquo;</a></td></tr>`).join("")}
+  const filtered = TOOLS.filter(x=>{
+    const name=df("tools",x.name,"name",x.name), what=df("tools",x.name,"whatItIs",x.whatItIs);
+    return (toolCat==="All"||x.category===toolCat)&&(!qq||name.toLowerCase().includes(qq)||what.toLowerCase().includes(qq)||x.name.toLowerCase().includes(qq));
+  });
+  return `<h1>${t("tools.title")}</h1><p class="lede">${t("tools.lede")}</p>
+    <input class="field" id="toolQ" type="search" placeholder="${esc(t("tools.ph"))}" value="${esc(toolQ)}" oninput="toolQ=this.value;render(true)">
+    <div class="chips" style="margin-top:8px">${cats.map(c=>`<button class="${c===toolCat?'active':''}" onclick="toolCat=${esc(JSON.stringify(c))};render()">${t("cat."+c)}</button>`).join("")}</div>
+    <p class="small">${filtered.length===1?t("tools.count1"):t("tools.count",{n:filtered.length})}</p>
+    <table class="itable"><thead><tr><th style="width:180px">${t("tools.th.resource")}</th><th style="width:90px">${t("tools.th.category")}</th><th>${t("tools.th.what")}</th><th style="width:130px">${t("tools.th.cost")}</th><th style="width:90px">&nbsp;</th></tr></thead>
+    <tbody>${filtered.length===0?`<tr><td colspan="5"><em>${t("tools.none")}</em></td></tr>`:
+      filtered.map(x=>`<tr><td><strong>${esc(df("tools",x.name,"name",x.name))}</strong><div class="small">${esc(df("tools",x.name,"location",x.location))}</div></td>
+        <td>${t("cat."+x.category)}</td>
+        <td>${esc(df("tools",x.name,"whatItIs",x.whatItIs))}<div class="small" style="margin-top:4px"><strong>${t("tools.who")}</strong> ${esc(df("tools",x.name,"whoItsFor",x.whoItsFor))}</div><div class="small"><strong>${t("tools.how")}</strong> ${esc(df("tools",x.name,"howToAccess",x.howToAccess))}</div></td>
+        <td>${esc(df("tools",x.name,"cost",x.cost))}</td><td><a class="btn" href="${x.url}" target="_blank" rel="noopener">${t("tools.access")} &raquo;</a></td></tr>`).join("")}
     </tbody></table>`;
 }
 
-function timeAgo(iso){const m=Math.round((Date.now()-new Date(iso))/60000);if(m<60)return m+"m ago";const h=Math.round(m/60);if(h<24)return h+"h ago";return Math.round(h/24)+"d ago";}
+function timeAgo(iso){
+  const m=Math.round((Date.now()-new Date(iso))/60000);
+  if(m<60)return t("time.m",{n:m});
+  const h=Math.round(m/60);
+  if(h<24)return t("time.h",{n:h});
+  return t("time.d",{n:Math.round(h/24)});
+}
 function reportView(){
-  return `<h1>Report &amp; Track Issues</h1><p class="lede">See what neighbors have recently reported to 311, and report something new.</p>
-    <p><a class="btn btn-primary" href="https://seeclickfix.com/portland_2/report" target="_blank" rel="noopener">Report a New Issue &raquo;</a></p>
-    <div class="notice"><strong>Showing sample data.</strong> Mock entries; SeeClickFix's API blocks browser requests without a server proxy.</div>
+  return `<h1>${t("report.title")}</h1><p class="lede">${t("report.lede")}</p>
+    <p><a class="btn btn-primary" href="https://seeclickfix.com/portland_2/report" target="_blank" rel="noopener">${t("report.new")} &raquo;</a></p>
+    <div class="notice"><strong>${t("report.notice.b")}</strong> ${t("report.notice")}</div>
     <div class="map-wrap"><div id="map"></div></div>
-    <h2 style="margin-top:14px">${ISSUES.length} recent open issues</h2>
-    <table class="itable"><thead><tr><th style="width:110px">Type</th><th style="width:90px">Status</th><th>Description</th><th style="width:200px">Location</th><th style="width:80px">When</th><th style="width:60px">&nbsp;</th></tr></thead>
-    <tbody>${ISSUES.map(i=>`<tr><td><strong>${esc(i.type)}</strong></td>
-      <td><span class="badge ${i.status.toLowerCase()==='open'?'badge-open':'badge-pending'}">${esc(i.status)}</span></td>
-      <td>${esc(i.description)}</td><td>${esc(i.address)}</td><td class="small">${timeAgo(i.createdAt)}</td>
-      <td><a href="${i.url}" target="_blank" rel="noopener">View</a></td></tr>`).join("")}</tbody></table>`;
+    <h2 style="margin-top:14px">${t("report.recent",{n:ISSUES.length})}</h2>
+    <table class="itable"><thead><tr><th style="width:110px">${t("report.th.type")}</th><th style="width:90px">${t("report.th.status")}</th><th>${t("report.th.desc")}</th><th style="width:200px">${t("report.th.loc")}</th><th style="width:80px">${t("report.th.when")}</th><th style="width:60px">&nbsp;</th></tr></thead>
+    <tbody>${ISSUES.map(i=>`<tr><td><strong>${t("itype."+i.type)}</strong></td>
+      <td><span class="badge ${i.status.toLowerCase()==='open'?'badge-open':'badge-pending'}">${t("status."+i.status)}</span></td>
+      <td>${esc(df("issues",i.id,"description",i.description))}</td><td>${esc(i.address)}</td><td class="small">${timeAgo(i.createdAt)}</td>
+      <td><a href="${i.url}" target="_blank" rel="noopener">${t("report.view")}</a></td></tr>`).join("")}</tbody></table>`;
 }
 function initMap(){
   const el=document.getElementById("map"); if(!el||!window.L) return;
   const map=L.map(el,{scrollWheelZoom:false}).setView([43.6591,-70.2568],13);
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
-  ISSUES.forEach(i=>L.marker([i.lat,i.lng]).addTo(map).bindPopup(`<strong>${esc(i.type)}</strong><br>${esc(i.status)}<br>${esc(i.address)}<br><a href="${i.url}" target="_blank" rel="noopener">View on SeeClickFix &raquo;</a>`));
+  ISSUES.forEach(i=>L.marker([i.lat,i.lng]).addTo(map).bindPopup(`<strong>${t("itype."+i.type)}</strong><br>${t("status."+i.status)}<br>${esc(i.address)}<br><a href="${i.url}" target="_blank" rel="noopener">${t("report.viewOn")} &raquo;</a>`));
   setTimeout(()=>map.invalidateSize(),200);
 }
 
 function permitsView(){
   if(!permitPick){
-    return `<h1>Do I Even Need a Permit?</h1><p class="lede">Pick what you're planning for a plain-language read on whether a permit is likely, what to prepare, and where to apply.</p>
-      <div class="notice"><strong>Guidance, not an official determination.</strong> Only the City of Portland Permitting &amp; Inspections Department can confirm.</div>
-      <p class="small"><strong>What are you planning?</strong></p>
-      <table class="itable"><tbody>${PERMIT_PROJECTS.map(p=>`<tr><td style="width:160px"><a href="#" onclick="event.preventDefault();permitPick=${JSON.stringify(p.id)};render()"><strong>${esc(p.label)}</strong></a></td><td>${esc(p.summary)}</td></tr>`).join("")}</tbody></table>`;
+    return `<h1>${t("permits.title")}</h1><p class="lede">${t("permits.lede")}</p>
+      <div class="notice"><strong>${t("permits.notice.b")}</strong> ${t("permits.notice")}</div>
+      <p class="small"><strong>${t("permits.q")}</strong></p>
+      <table class="itable"><tbody>${PERMIT_PROJECTS.map(p=>`<tr><td style="width:160px"><a href="#" onclick="event.preventDefault();permitPick=${esc(JSON.stringify(p.id))};render()"><strong>${esc(df("permits",p.id,"label",p.label))}</strong></a></td><td>${esc(df("permits",p.id,"summary",p.summary))}</td></tr>`).join("")}</tbody></table>`;
   }
   const p=PERMIT_PROJECTS.find(x=>x.id===permitPick);
-  return `<h1>Do I Even Need a Permit?</h1>
-    <p><a href="#" onclick="event.preventDefault();permitPick=null;render()">&laquo; Choose a different project</a></p>
-    <div class="box"><div class="box-hd">${esc(p.label)} <span class="badge ${p.level==='yes'?'badge-pending':''}">${p.level==='yes'?'Permit likely':'It depends'}</span></div>
-    <div class="box-bd"><p><strong>${esc(p.verdict)}</strong></p><p>${esc(p.summary)}</p>
-    <h3 style="font-size:12px;font-family:Verdana,sans-serif;text-transform:uppercase;color:#663300;margin-top:12px">What's involved</h3><p>${esc(p.details)}</p>
-    <h3 style="font-size:12px;font-family:Verdana,sans-serif;text-transform:uppercase;color:#663300;margin-top:12px">Checklist</h3>
-    <ul class="check-list">${p.checklist.map(c=>`<li>${esc(c)}</li>`).join("")}</ul>
-    <div class="panel"><strong>Rough timeline:</strong> ${esc(p.timeline)}</div>
-    ${p.note?`<p class="small"><em>${esc(p.note)}</em></p>`:""}
-    <p><a class="btn btn-primary" href="${PERMITS_PORTAL_URL}" target="_blank" rel="noopener">Start in Citizen Self Service &raquo;</a></p></div></div>`;
+  const note=df("permits",p.id,"note",p.note);
+  return `<h1>${t("permits.title")}</h1>
+    <p><a href="#" onclick="event.preventDefault();permitPick=null;render()">&laquo; ${t("permits.back")}</a></p>
+    <div class="box"><div class="box-hd">${esc(df("permits",p.id,"label",p.label))} <span class="badge ${p.level==='yes'?'badge-pending':''}">${p.level==='yes'?t("permits.likely"):t("permits.depends")}</span></div>
+    <div class="box-bd"><p><strong>${esc(df("permits",p.id,"verdict",p.verdict))}</strong></p><p>${esc(df("permits",p.id,"summary",p.summary))}</p>
+    <h3 style="font-size:12px;font-family:Verdana,sans-serif;text-transform:uppercase;color:#663300;margin-top:12px">${t("permits.involved")}</h3><p>${esc(df("permits",p.id,"details",p.details))}</p>
+    <h3 style="font-size:12px;font-family:Verdana,sans-serif;text-transform:uppercase;color:#663300;margin-top:12px">${t("permits.checklist")}</h3>
+    <ul class="check-list">${df("permits",p.id,"checklist",p.checklist).map(c=>`<li>${esc(c)}</li>`).join("")}</ul>
+    <div class="panel"><strong>${t("permits.timeline")}</strong> ${esc(df("permits",p.id,"timeline",p.timeline))}</div>
+    ${note?`<p class="small"><em>${esc(note)}</em></p>`:""}
+    <p><a class="btn btn-primary" href="${PERMITS_PORTAL_URL}" target="_blank" rel="noopener">${t("permits.start")} &raquo;</a></p></div></div>`;
 }
 
-function fmtDate(iso){return new Date(iso).toLocaleString("en-US",{weekday:"short",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});}
+function fmtDate(iso){return new Date(iso).toLocaleString(LOCALES[lang]||"en-US",{weekday:"short",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});}
 function meetingsView(){
   const s=[...MEETINGS].sort((a,b)=>new Date(a.dateTime)-new Date(b.dateTime));
-  return `<h1>City Meetings, in Plain English</h1><p class="lede">What's coming up at City Council and its boards — what each meeting is, why it matters, and how to have your say.</p>
-    <div class="notice"><strong>Sample schedule.</strong> Confirm on the <a href="${OFFICIAL_CALENDAR_URL}" target="_blank" rel="noopener">official meetings portal</a>.</div>
-    <div class="stack">${s.map(m=>`<div class="box"><div class="box-hd">${esc(m.body)} <span class="badge">${esc(m.type)}</span></div>
-      <div class="box-bd"><p class="small"><strong>${fmtDate(m.dateTime)}</strong> · ${esc(m.location)}</p>
-      <p>${esc(m.whatItIs)}</p><p class="small"><strong>Why it matters:</strong> ${esc(m.whyItMatters)}</p>
-      <div class="panel"><p><strong>Have your say:</strong> ${esc(m.howToComment)}</p><p class="small"><strong>Deadline:</strong> ${esc(m.commentDeadline)}</p></div>
-      <p><a href="${m.agendaUrl}" target="_blank" rel="noopener">View the agenda &raquo;</a></p></div></div>`).join("")}</div>`;
+  return `<h1>${t("meetings.title")}</h1><p class="lede">${t("meetings.lede")}</p>
+    <div class="notice"><strong>${t("meetings.notice.b")}</strong> ${t("meetings.confirm")} <a href="${OFFICIAL_CALENDAR_URL}" target="_blank" rel="noopener">${t("meetings.portal")}</a>.</div>
+    <div class="stack">${s.map(m=>`<div class="box"><div class="box-hd">${esc(df("meetings",m.id,"body",m.body))} <span class="badge">${esc(df("meetings",m.id,"type",m.type))}</span></div>
+      <div class="box-bd"><p class="small"><strong>${fmtDate(m.dateTime)}</strong> · ${esc(df("meetings",m.id,"location",m.location))}</p>
+      <p>${esc(df("meetings",m.id,"whatItIs",m.whatItIs))}</p><p class="small"><strong>${t("meetings.why")}</strong> ${esc(df("meetings",m.id,"whyItMatters",m.whyItMatters))}</p>
+      <div class="panel"><p><strong>${t("meetings.say")}</strong> ${esc(df("meetings",m.id,"howToComment",m.howToComment))}</p><p class="small"><strong>${t("meetings.deadline")}</strong> ${esc(df("meetings",m.id,"commentDeadline",m.commentDeadline))}</p></div>
+      <p><a href="${m.agendaUrl}" target="_blank" rel="noopener">${t("meetings.agenda")} &raquo;</a></p></div></div>`).join("")}</div>`;
 }
 
 async function pointField(layer,lon,lat,field){
@@ -684,11 +917,11 @@ async function pointField(layer,lon,lat,field){
 async function lookupReps(e){
   e.preventDefault();
   const addr=document.getElementById("repAddr").value.trim(); if(!addr) return;
-  const out=document.getElementById("repOut"); out.innerHTML='<p class="small">Looking up…</p>';
+  const out=document.getElementById("repOut"); out.innerHTML=`<p class="small">${t("lookup.loading")}</p>`;
   try{
     const q=/portland/i.test(addr)?addr:addr+", Portland, ME";
     const geo=await (await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&q="+encodeURIComponent(q))).json();
-    if(!geo?.length) throw new Error("We couldn't find that address. Try more detail, e.g. '123 Congress St, Portland, ME'.");
+    if(!geo?.length) throw new Error(t("err.addr"));
     const lat=parseFloat(geo[0].lat), lon=parseFloat(geo[0].lon), matched=geo[0].display_name;
     const [council,house,senate,trash]=await Promise.all([
       pointField(GIS+"/Political/Council_Districts/FeatureServer/112",lon,lat,"NAME"),
@@ -696,40 +929,40 @@ async function lookupReps(e){
       pointField(GIS+"/Political/State_Senate_Districts/FeatureServer/8",lon,lat,"DISTRICT"),
       pointField(GIS+"/City_of_Portland_Trash_and_Recycling/MapServer/1",lon,lat,"Trash_Route"),
     ]);
-    if(!council) throw new Error(`That address (${matched}) doesn't appear to be inside Portland.`);
+    if(!council) throw new Error(t("err.outside",{addr:matched}));
     const c = COUNCILORS[council];
     const councilorBox = c
-      ? `<div class="box"><div class="box-hd">Your District Councilor</div><div class="box-bd">
-          <p class="small">City Council &middot; District ${esc(council)}</p>
+      ? `<div class="box"><div class="box-hd">${t("reps.councilor.h")}</div><div class="box-bd">
+          <p class="small">${t("reps.district",{n:esc(council)})}</p>
           <p style="font-size:14px;margin-bottom:4px"><strong>${esc(c.name)}</strong></p>
           <p><a href="mailto:${esc(c.email)}">${esc(c.email)}</a></p></div></div>`
-      : `<div class="box"><div class="box-hd">Your District Councilor</div><div class="box-bd">
-          <p>City Council &mdash; District ${esc(council)}</p>
-          <p class="small"><a href="${COUNCIL_URL}" target="_blank" rel="noopener">See your councilor on the City Council page &raquo;</a></p></div></div>`;
-    const citywideBox = `<div class="box"><div class="box-hd">Citywide Representatives</div><div class="box-bd">
-      <p class="small">The Mayor and three At-Large councilors represent every resident of Portland.</p>
+      : `<div class="box"><div class="box-hd">${t("reps.councilor.h")}</div><div class="box-bd">
+          <p>${t("reps.districtLong",{n:esc(council)})}</p>
+          <p class="small"><a href="${COUNCIL_URL}" target="_blank" rel="noopener">${t("reps.see")} &raquo;</a></p></div></div>`;
+    const citywideBox = `<div class="box"><div class="box-hd">${t("reps.citywide.h")}</div><div class="box-bd">
+      <p class="small">${t("reps.citywide.p")}</p>
       <table class="itable"><tbody>${CITYWIDE.map(p=>
-        `<tr><th style="width:150px">${esc(p.role)}</th><td>${esc(p.name)}</td><td style="width:250px"><a href="mailto:${esc(p.email)}">${esc(p.email)}</a></td></tr>`).join("")}
+        `<tr><th style="width:150px">${t("role."+p.role)}</th><td>${esc(p.name)}</td><td style="width:250px"><a href="mailto:${esc(p.email)}">${esc(p.email)}</a></td></tr>`).join("")}
       </tbody></table></div></div>`;
     const stateRows = [
-      senate?`<tr><th style="width:220px">Maine State Senate</th><td>District ${esc(senate)}</td><td style="width:120px"><a class="btn" href="${SENATE_URL}" target="_blank" rel="noopener">See senator &raquo;</a></td></tr>`:"",
-      house?`<tr><th style="width:220px">Maine House of Representatives</th><td>District ${esc(house)}</td><td style="width:120px"><a class="btn" href="${HOUSE_URL}" target="_blank" rel="noopener">See representative &raquo;</a></td></tr>`:"",
-      trash?`<tr><th style="width:220px">Trash &amp; recycling day</th><td>${esc(trash)}</td><td style="width:120px"><a class="btn" href="https://www.portlandmaine.gov/trash-recycling" target="_blank" rel="noopener">Details &raquo;</a></td></tr>`:""
+      senate?`<tr><th style="width:220px">${t("reps.senate")}</th><td>${t("reps.distN",{n:esc(senate)})}</td><td style="width:120px"><a class="btn" href="${SENATE_URL}" target="_blank" rel="noopener">${t("reps.seeSen")} &raquo;</a></td></tr>`:"",
+      house?`<tr><th style="width:220px">${t("reps.house")}</th><td>${t("reps.distN",{n:esc(house)})}</td><td style="width:120px"><a class="btn" href="${HOUSE_URL}" target="_blank" rel="noopener">${t("reps.seeRep")} &raquo;</a></td></tr>`:"",
+      trash?`<tr><th style="width:220px">${t("reps.trash")}</th><td>${esc(trash)}</td><td style="width:120px"><a class="btn" href="https://www.portlandmaine.gov/trash-recycling" target="_blank" rel="noopener">${t("reps.details")} &raquo;</a></td></tr>`:""
     ].join("");
-    out.innerHTML = `<p class="small" style="margin-top:12px">Matched address: ${esc(matched)}</p>
+    out.innerHTML = `<p class="small" style="margin-top:12px">${t("reps.matched",{addr:esc(matched)})}</p>
       ${councilorBox}
       ${citywideBox}
-      ${stateRows?`<h2 style="margin-top:14px">State &amp; City Services</h2><table class="itable"><tbody>${stateRows}</tbody></table>`:""}
-      <p class="small">District boundaries come straight from the city's official GIS maps. Councilor contacts reflect the current City Council roster &mdash; confirm on the <a href="${COUNCIL_URL}" target="_blank" rel="noopener">City Council page</a>.</p>`;
-  }catch(err){ out.innerHTML=`<div class="notice">${esc(err.message||"Something went wrong.")}</div>`; }
+      ${stateRows?`<h2 style="margin-top:14px">${t("reps.state.h")}</h2><table class="itable"><tbody>${stateRows}</tbody></table>`:""}
+      <p class="small">${t("reps.foot",{url:COUNCIL_URL})}</p>`;
+  }catch(err){ out.innerHTML=`<div class="notice">${esc(err.message||t("err.generic"))}</div>`; }
 }
 function repsView(){
-  return `<h1>Who Represents You?</h1><p class="lede">Enter your Portland address to find your city council district, state legislators, and trash &amp; recycling day.</p>
+  return `<h1>${t("reps.title")}</h1><p class="lede">${t("reps.lede")}</p>
     <form onsubmit="lookupReps(event)"><table style="width:100%"><tbody><tr>
-      <td style="padding-right:6px"><input class="field" id="repAddr" type="text" placeholder="e.g. 389 Congress St" autocomplete="street-address"></td>
-      <td style="width:100px"><button class="btn btn-primary" type="submit" style="width:100%;padding:5px 10px">Look up</button></td>
+      <td style="padding-right:6px"><input class="field" id="repAddr" type="text" placeholder="${esc(t("reps.ph"))}" autocomplete="street-address"></td>
+      <td style="width:100px"><button class="btn btn-primary" type="submit" style="width:100%;padding:5px 10px">${t("reps.btn")}</button></td>
     </tr></tbody></table></form>
-    <p class="small">Matched against the City of Portland's official GIS maps — free, nothing stored.</p>
+    <p class="small">${t("reps.src")}</p>
     <div id="repOut"></div>`;
 }
 
@@ -747,11 +980,11 @@ async function pointAllAttrs(layer,lon,lat,fields){
 async function lookupProperty(e){
   e.preventDefault();
   const addr=document.getElementById("propAddr").value.trim(); if(!addr) return;
-  const out=document.getElementById("propOut"); out.innerHTML='<p class="small">Looking up…</p>';
+  const out=document.getElementById("propOut"); out.innerHTML=`<p class="small">${t("lookup.loading")}</p>`;
   try{
     const q=/portland/i.test(addr)?addr:addr+", Portland, ME";
     const geo=await (await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&q="+encodeURIComponent(q))).json();
-    if(!geo?.length) throw new Error("We couldn't find that address. Try more detail, e.g. '123 Congress St, Portland, ME'.");
+    if(!geo?.length) throw new Error(t("err.addr"));
     const lat=parseFloat(geo[0].lat), lon=parseFloat(geo[0].lon), matched=geo[0].display_name;
     const [parcelRows,hist,council]=await Promise.all([
       pointAllAttrs(GIS+"/Zoning_Map_2026_05_01/FeatureServer/8",lon,lat,"*"),
@@ -760,7 +993,7 @@ async function lookupProperty(e){
     ]);
     // A parcel can return several rows; prefer one that actually carries a zone code.
     const parcel=(parcelRows&&parcelRows.length)?(parcelRows.find(a=>(a.zone_recod||"").trim())||parcelRows[0]):null;
-    if(!parcel) throw new Error(`That address (${matched}) doesn't appear to land on a Portland tax parcel. Try the street address without an apartment or unit number.`);
+    if(!parcel) throw new Error(t("err.parcel",{addr:matched}));
     const zone=(parcel.zone_recod||"").trim();
     const zi=zoneInfo(zone);
     const cbl=fmtCBL(parcel.ias_parcel_id);
@@ -768,70 +1001,70 @@ async function lookupProperty(e){
     const clr=councilNum?COUNCILORS[councilNum]:null;
     const parcelAddr=[parcel.st_num,parcel.st_name].filter(Boolean).join(" ");
     const facts=[
-      parcel.land_use?["Land use (assessor)",parcel.land_use]:null,
-      parcel.sqft?["Lot size",Number(String(parcel.sqft).replace(/[^0-9.]/g,""))?Number(String(parcel.sqft).replace(/[^0-9.]/g,"")).toLocaleString()+" sq ft":String(parcel.sqft)]:null,
-      parcel.yrblt?["Year built",parcel.yrblt]:null,
-      parcel.units?["Units",parcel.units]:null,
-      parcel.stories?["Stories",parcel.stories]:null
+      parcel.land_use?[t("prop.landUse"),parcel.land_use]:null,
+      parcel.sqft?[t("prop.lot"),Number(String(parcel.sqft).replace(/[^0-9.]/g,""))?Number(String(parcel.sqft).replace(/[^0-9.]/g,"")).toLocaleString(LOCALES[lang]||"en-US")+" "+t("prop.sqft"):String(parcel.sqft)]:null,
+      parcel.yrblt?[t("prop.year"),parcel.yrblt]:null,
+      parcel.units?[t("prop.units"),parcel.units]:null,
+      parcel.stories?[t("prop.stories"),parcel.stories]:null
     ].filter(Boolean);
     const overlays=[];
-    if((parcel.shoreland||"").trim()) overlays.push("Shoreland overlay applies (extra water-protection rules)");
-    if((parcel.overlayzoning||"").trim()) overlays.push(`Overlay zoning: ${parcel.overlayzoning}`);
+    if((parcel.shoreland||"").trim()) overlays.push(t("prop.shore"));
+    if((parcel.overlayzoning||"").trim()) overlays.push(t("prop.overlayZ",{v:parcel.overlayzoning}));
     out.innerHTML = `
-      <p class="small" style="margin-top:12px">Matched address: ${esc(matched)}</p>
-      <div class="box"><div class="box-hd">Property Snapshot${parcelAddr?` &mdash; ${esc(parcelAddr)}`:""}</div><div class="box-bd">
+      <p class="small" style="margin-top:12px">${t("reps.matched",{addr:esc(matched)})}</p>
+      <div class="box"><div class="box-hd">${t("prop.snapshot")}${parcelAddr?` &mdash; ${esc(parcelAddr)}`:""}</div><div class="box-bd">
         <table class="itable"><tbody>
-          <tr><th style="width:170px">Zone</th><td>${zone?`<strong>${esc(zone)}</strong> &mdash; ${esc(zi.name)}`:"Not available for this parcel"}</td></tr>
-          ${zone?`<tr><th>What that means</th><td>${esc(zi.blurb)} Exact height, setback, and lot-coverage standards for ${esc(zone)} are in the Land Use Code &mdash; open it below.</td></tr>`:""}
-          <tr><th>Historic district</th><td>${hist?`<strong>Yes</strong> &mdash; ${esc(hist.name)} local historic district (exterior changes need Historic Preservation review)`:"No"}</td></tr>
-          <tr><th>Council district</th><td>District ${esc(councilNum||"&mdash;")}${clr?` &mdash; ${esc(clr.name)} (<a href="mailto:${esc(clr.email)}">${esc(clr.email)}</a>)`:""}</td></tr>
-          ${cbl?`<tr><th>Parcel (CBL)</th><td><strong>${esc(cbl)}</strong> <span class="small">&mdash; chart-block-lot; use this to search city records</span></td></tr>`:""}
+          <tr><th style="width:170px">${t("prop.zone")}</th><td>${zone?`<strong>${esc(zone)}</strong> &mdash; ${esc(zi.name)}`:t("prop.zoneNA")}</td></tr>
+          ${zone?`<tr><th>${t("prop.means")}</th><td>${esc(zi.blurb)} ${t("prop.meansTail",{zone:esc(zone)})}</td></tr>`:""}
+          <tr><th>${t("prop.hist")}</th><td>${hist?t("prop.histYes",{name:esc(hist.name)}):t("prop.no")}</td></tr>
+          <tr><th>${t("prop.councilD")}</th><td>${t("reps.distN",{n:esc(councilNum||"&mdash;")})}${clr?` &mdash; ${esc(clr.name)} (<a href="mailto:${esc(clr.email)}">${esc(clr.email)}</a>)`:""}</td></tr>
+          ${cbl?`<tr><th>${t("prop.cbl")}</th><td><strong>${esc(cbl)}</strong> <span class="small">${t("prop.cblNote")}</span></td></tr>`:""}
           ${facts.map(f=>`<tr><th>${esc(f[0])}</th><td>${esc(String(f[1]))}</td></tr>`).join("")}
-          ${overlays.length?`<tr><th>Overlays</th><td>${overlays.map(esc).join("<br>")}</td></tr>`:""}
+          ${overlays.length?`<tr><th>${t("prop.overlays")}</th><td>${overlays.map(esc).join("<br>")}</td></tr>`:""}
         </tbody></table>
         <p style="margin-top:8px">
-          <a class="btn btn-primary" href="${LAND_USE_CODE_URL}" target="_blank" rel="noopener">Read the Zoning Rules &raquo;</a>
-          <a class="btn" href="${ZONING_MAP_URL}" target="_blank" rel="noopener">View GIS Zoning Map &raquo;</a>
-          <a class="btn" href="${ASSESSOR_URL}" target="_blank" rel="noopener">Property Tax Record &raquo;</a>
+          <a class="btn btn-primary" href="${LAND_USE_CODE_URL}" target="_blank" rel="noopener">${t("prop.readRules")} &raquo;</a>
+          <a class="btn" href="${ZONING_MAP_URL}" target="_blank" rel="noopener">${t("prop.gisMap")} &raquo;</a>
+          <a class="btn" href="${ASSESSOR_URL}" target="_blank" rel="noopener">${t("prop.taxRecord")} &raquo;</a>
         </p>
-        <p class="small">On the assessor site, search ${cbl?`CBL <strong>${esc(cbl)}</strong> or `:""}the street address. Zoning questions? Contact <a href="${ZONING_ADMIN_URL}" target="_blank" rel="noopener">Zoning Administration</a>.</p>
+        <p class="small">${t("prop.assessorNote",{cblpart:cbl?t("prop.cblOr",{cbl:esc(cbl)}):"",url:ZONING_ADMIN_URL})}</p>
       </div></div>
-      <div class="notice"><strong>Guidance, not an official determination.</strong> Zoning, historic, and parcel data come live from the City of Portland's GIS. Confirm anything important with Zoning Administration before you buy or build.</div>`;
-  }catch(err){ out.innerHTML=`<div class="notice">${esc(err.message||"Something went wrong.")}</div>`; }
+      <div class="notice"><strong>${t("prop.guidance.b")}</strong> ${t("prop.guidance")}</div>`;
+  }catch(err){ out.innerHTML=`<div class="notice">${esc(err.message||t("err.generic"))}</div>`; }
 }
 function propertyView(){
-  return `<h1>What Can I Do With My Property?</h1><p class="lede">Type a Portland address to see its zoning district in plain English, whether it's in a historic district, and where its official parcel and tax records live.</p>
+  return `<h1>${t("prop.title")}</h1><p class="lede">${t("prop.lede")}</p>
     <form onsubmit="lookupProperty(event)"><table style="width:100%"><tbody><tr>
-      <td style="padding-right:6px"><input class="field" id="propAddr" type="text" placeholder="e.g. 389 Congress St" autocomplete="street-address"></td>
-      <td style="width:100px"><button class="btn btn-primary" type="submit" style="width:100%;padding:5px 10px">Look up</button></td>
+      <td style="padding-right:6px"><input class="field" id="propAddr" type="text" placeholder="${esc(t("reps.ph"))}" autocomplete="street-address"></td>
+      <td style="width:100px"><button class="btn btn-primary" type="submit" style="width:100%;padding:5px 10px">${t("reps.btn")}</button></td>
     </tr></tbody></table></form>
-    <p class="small">Live from the City of Portland's official GIS &mdash; free, nothing stored.</p>
+    <p class="small">${t("prop.src")}</p>
     <div id="propOut"></div>`;
 }
 
 function aboutView(){
-  return `<h1>About Portland Problems</h1>
-    <p class="lede">Portland Problems is an <strong>unofficial, independent civic resource</strong> for Portland, Maine. It is not run by, endorsed by, or affiliated with the City of Portland. Its only job is to translate city rules and services into plain English and point you to the real, official place to act.</p>
-    <div class="notice"><strong>Official information takes precedence.</strong> If anything on this site conflicts with the City of Portland's own websites, ordinances, or staff, the city is right and this site is wrong. Always confirm important details with the city before you rely on them.</div>
-    <h2>Where the data comes from</h2>
+  return `<h1>${t("about.title")}</h1>
+    <p class="lede">${t("about.lede")}</p>
+    <div class="notice"><strong>${t("about.notice.b")}</strong> ${t("about.notice")}</div>
+    <h2>${t("about.src.h")}</h2>
     <ul class="check-list">
-      <li><strong>City of Portland GIS</strong> (gis.portlandmaine.gov) — zoning districts, parcels, council districts, state legislative districts, historic districts, and trash routes, queried live when you look up an address.</li>
-      <li><strong>OpenStreetMap / Nominatim</strong> — turns the address you type into map coordinates.</li>
-      <li><strong>City of Portland web pages</strong> — service links, permits, and department information.</li>
-      <li><strong>Portland Public Library, SeeClickFix (Portland 311), Maine Legislature</strong> — linked directly for passes, issue reporting, and legislator lookups.</li>
-      <li><strong>Sample data:</strong> the 311 issue map and the meeting schedule are clearly-labeled examples, not live feeds.</li>
+      <li>${t("about.src.1")}</li>
+      <li>${t("about.src.2")}</li>
+      <li>${t("about.src.3")}</li>
+      <li>${t("about.src.4")}</li>
+      <li>${t("about.src.5")}</li>
     </ul>
-    <h2>How often it's updated</h2>
-    <p>Address lookups (zoning, districts, trash day) come <strong>live from the city's GIS</strong> every time you search. Curated content — links, councilor contacts, permit guidance — is checked by hand; the last full link audit was <strong>July 2026</strong>. Found something stale? Check the official site and trust it over this one.</p>
-    <h2>Privacy</h2>
-    <p>No accounts, no cookies, no analytics, no tracking. Addresses you type are sent directly from your browser to OpenStreetMap (to find coordinates) and the City of Portland's GIS (to find your districts) — this site has no server and <strong>never sees or stores anything you enter</strong>.</p>
-    <h2>Official City of Portland resources</h2>
+    <h2>${t("about.upd.h")}</h2>
+    <p>${t("about.upd.p")}</p>
+    <h2>${t("about.priv.h")}</h2>
+    <p>${t("about.priv.p")}</p>
+    <h2>${t("about.official.h")}</h2>
     <ul class="check-list">
-      <li><a href="https://www.portlandmaine.gov/" target="_blank" rel="noopener">portlandmaine.gov</a> — the official city website</li>
-      <li><a href="https://seeclickfix.com/portland_2/report" target="_blank" rel="noopener">Portland 311</a> — report an issue</li>
-      <li><a href="https://selfservice.portlandmaine.gov/EnerGov_Prod/SelfService#/home" target="_blank" rel="noopener">Citizen Self Service</a> — permits &amp; licenses</li>
-      <li><a href="https://portlandme.portal.civicclerk.com/" target="_blank" rel="noopener">Meetings &amp; agendas portal</a></li>
-      <li><a href="https://assessors.portlandmaine.gov" target="_blank" rel="noopener">Assessor property search</a></li>
+      <li><a href="https://www.portlandmaine.gov/" target="_blank" rel="noopener">portlandmaine.gov</a> — ${t("about.off.1")}</li>
+      <li><a href="https://seeclickfix.com/portland_2/report" target="_blank" rel="noopener">Portland 311</a> — ${t("about.off.2")}</li>
+      <li><a href="https://selfservice.portlandmaine.gov/EnerGov_Prod/SelfService#/home" target="_blank" rel="noopener">Citizen Self Service</a> — ${t("about.off.3")}</li>
+      <li><a href="https://portlandme.portal.civicclerk.com/" target="_blank" rel="noopener">${t("about.off.4")}</a></li>
+      <li><a href="https://assessors.portlandmaine.gov" target="_blank" rel="noopener">${t("about.off.5")}</a></li>
     </ul>`;
 }
 
@@ -862,10 +1095,13 @@ function render(skipFocus){
 
 function readHash(){
   const h = location.hash.replace("#","");
-  section = SECTIONS.some(s=>s.id===h) ? h : "home";
+  section = SECTIONS.includes(h) ? h : "home";
   render();
 }
 window.addEventListener("hashchange", readHash);
+renderChrome();
 readHash();
+// A saved non-English preference: load its translation file, then re-render.
+if(lang !== "en") setLang(lang);
 </script>
 </body></html>
