@@ -360,7 +360,7 @@ input.field:focus { outline: 1px solid #1e4e8c; }
   <div class="footer">
     <p><strong>Not an official City of Portland website.</strong> Independent guide pointing to real city services. Always confirm details with the city.</p>
     <p>Official site: <a href="https://www.portlandmaine.gov/" target="_blank" rel="noopener">portlandmaine.gov</a> · Report a problem: <a href="https://seeclickfix.com/portland_2/report" target="_blank" rel="noopener">Portland 311</a></p>
-    <p class="small">&copy; 2026 Portland Problems · Last updated July 22, 2026</p>
+    <p class="small">&copy; 2026 Portland Problems · Last updated July 22, 2026 · <a href="#about" onclick="event.preventDefault();go('about')">About this site</a></p>
   </div>
 </div>
 
@@ -498,7 +498,7 @@ const CITYWIDE = [
 const SECTIONS = [
   {id:"home",label:"Home"},{id:"ask",label:"Ask & Route"},{id:"property",label:"My Property"},
   {id:"tools",label:"Public Tools"},{id:"report",label:"Report an Issue"},{id:"permits",label:"Permits"},
-  {id:"meetings",label:"Meetings"},{id:"reps",label:"Your Reps"}
+  {id:"meetings",label:"Meetings"},{id:"reps",label:"Your Reps"},{id:"about",label:"About"}
 ];
 const LABEL = Object.fromEntries(SECTIONS.map(s=>[s.id,s.label]));
 const esc = s => String(s??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -795,6 +795,32 @@ function propertyView(){
     <div id="propOut"></div>`;
 }
 
+function aboutView(){
+  return `<h1>About Portland Problems</h1>
+    <p class="lede">Portland Problems is an <strong>unofficial, independent civic resource</strong> for Portland, Maine. It is not run by, endorsed by, or affiliated with the City of Portland. Its only job is to translate city rules and services into plain English and point you to the real, official place to act.</p>
+    <div class="notice"><strong>Official information takes precedence.</strong> If anything on this site conflicts with the City of Portland's own websites, ordinances, or staff, the city is right and this site is wrong. Always confirm important details with the city before you rely on them.</div>
+    <h2>Where the data comes from</h2>
+    <ul class="check-list">
+      <li><strong>City of Portland GIS</strong> (gis.portlandmaine.gov) — zoning districts, parcels, council districts, state legislative districts, historic districts, and trash routes, queried live when you look up an address.</li>
+      <li><strong>OpenStreetMap / Nominatim</strong> — turns the address you type into map coordinates.</li>
+      <li><strong>City of Portland web pages</strong> — service links, permits, and department information.</li>
+      <li><strong>Portland Public Library, SeeClickFix (Portland 311), Maine Legislature</strong> — linked directly for passes, issue reporting, and legislator lookups.</li>
+      <li><strong>Sample data:</strong> the 311 issue map and the meeting schedule are clearly-labeled examples, not live feeds.</li>
+    </ul>
+    <h2>How often it's updated</h2>
+    <p>Address lookups (zoning, districts, trash day) come <strong>live from the city's GIS</strong> every time you search. Curated content — links, councilor contacts, permit guidance — is checked by hand; the last full link audit was <strong>July 2026</strong>. Found something stale? Check the official site and trust it over this one.</p>
+    <h2>Privacy</h2>
+    <p>No accounts, no cookies, no analytics, no tracking. Addresses you type are sent directly from your browser to OpenStreetMap (to find coordinates) and the City of Portland's GIS (to find your districts) — this site has no server and <strong>never sees or stores anything you enter</strong>.</p>
+    <h2>Official City of Portland resources</h2>
+    <ul class="check-list">
+      <li><a href="https://www.portlandmaine.gov/" target="_blank" rel="noopener">portlandmaine.gov</a> — the official city website</li>
+      <li><a href="https://seeclickfix.com/portland_2/report" target="_blank" rel="noopener">Portland 311</a> — report an issue</li>
+      <li><a href="https://selfservice.portlandmaine.gov/EnerGov_Prod/SelfService#/home" target="_blank" rel="noopener">Citizen Self Service</a> — permits &amp; licenses</li>
+      <li><a href="https://portlandme.portal.civicclerk.com/" target="_blank" rel="noopener">Meetings &amp; agendas portal</a></li>
+      <li><a href="https://assessors.portlandmaine.gov" target="_blank" rel="noopener">Assessor property search</a></li>
+    </ul>`;
+}
+
 function render(skipFocus){
   const activeId = document.activeElement && document.activeElement.id;
   const selStart = document.activeElement && document.activeElement.selectionStart;
@@ -810,6 +836,7 @@ function render(skipFocus){
     case "permits": html=permitsView(); break;
     case "meetings": html=meetingsView(); break;
     case "reps": html=repsView(); break;
+    case "about": html=aboutView(); break;
   }
   el.innerHTML = html;
   if(section==="report") initMap();
