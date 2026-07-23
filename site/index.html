@@ -425,6 +425,60 @@ const HOUSE_URL = "https://www.mainelegislature.org/house/house/MemberProfiles/L
 const SENATE_URL = "https://legislature.maine.gov/senate-home-page/find-your-state-senator";
 const GIS = "https://gis.portlandmaine.gov/maps/rest/services";
 
+// Property & zoning lookup targets (all official city resources).
+const LAND_USE_CODE_URL = "https://www.portlandmaine.gov/land-use-code";   // full Land Use Code (PDF)
+const ZONING_MAP_URL   = "https://www.portlandmaine.gov/zoning-map";       // official interactive GIS zoning map
+const ASSESSOR_URL     = "https://assessors.portlandmaine.gov";            // assessor Property Search
+const ZONING_ADMIN_URL = "https://www.portlandmaine.gov/zoning-administration";
+
+// Plain-English descriptions of Portland's base zoning districts (post-ReCode).
+// [short name, what it means]. Unlisted codes fall back to a generic entry.
+const ZONES = {
+  "RN-1":["Residential Neighborhood 1","Portland's lowest-density residential zone — large lots, mostly detached houses."],
+  "RN-2":["Residential Neighborhood 2","Low-density residential — mostly detached homes on mid-size lots."],
+  "RN-3":["Residential Neighborhood 3","Low-to-moderate density residential — houses with some small multi-unit buildings."],
+  "RN-4":["Residential Neighborhood 4","Moderate-density neighborhood — small multifamily (2–4 unit) buildings are common."],
+  "RN-5":["Residential Neighborhood 5","Higher-density residential — multifamily housing is a normal part of the pattern."],
+  "RN-6":["Residential Neighborhood 6","Portland's densest residential neighborhoods, including apartment buildings."],
+  "B-1":["Neighborhood Business","Corner-store scale shops and services mixed in with housing."],
+  "B-2":["Community Business","Commercial corridors with a mix of shops, offices, and housing."],
+  "B-2b":["Community Business (b)","A B-2 sub-district with adjusted standards — see the Land Use Code."],
+  "B-3":["Downtown Business","The dense downtown core — offices, retail, housing, and civic uses."],
+  "B-4":["General Business","Larger-format and auto-oriented commercial areas."],
+  "B-5":["Urban Commercial","Larger mixed commercial areas — see the Land Use Code for specifics."],
+  "B-6":["Mixed Business","A mixed business district — see the Land Use Code for its specific purpose."],
+  "I-L":["Light Industrial","Light industrial uses with limits that protect nearby areas."],
+  "I-Lb":["Light Industrial (b)","A light-industrial sub-district — see the Land Use Code."],
+  "I-M":["Moderate Industrial","Moderate-impact industrial uses."],
+  "I-Mb":["Moderate Industrial (b)","A moderate-industrial sub-district — see the Land Use Code."],
+  "I-H":["Heavy Industrial","Portland's most intensive industrial uses."],
+  "I-B":["Industrial Business","Industrial / business-park style development."],
+  "IR-1":["Island Residential 1","Lower-density residential on the islands."],
+  "IR-2":["Island Residential 2","Village-scale residential on the islands."],
+  "IS-FBC":["Island Form-Based Code","Island district regulated by building form rather than use lists."],
+  "A-B":["Airport Business","Business district around the Portland International Jetport."],
+  "O":["Office","Office-oriented district — see the Land Use Code."],
+  "OS-P":["Open Space – Preservation","Parks and conservation land meant to stay open."],
+  "OS-R":["Open Space – Recreation","Active parks and recreation facilities."],
+  "ROW":["Public Right-of-Way","Streets and public ways — not a buildable private lot."],
+  "TOD-1":["Transit-Oriented Development 1","Denser mixed-use development around transit."],
+  "TOD-2":["Transit-Oriented Development 2","Denser mixed-use development around transit."],
+  "WCZ":["Waterfront Central Zone","The working waterfront — marine and port uses come first."],
+  "WPDZ":["Waterfront Port Development Zone","Port and marine-industrial development."],
+  "EWPZ":["Eastern Waterfront Port Zone","Eastern waterfront port district."]
+};
+function zoneInfo(z){
+  const e = ZONES[z];
+  return e ? {name:e[0], blurb:e[1]}
+           : {name:"See the Land Use Code", blurb:"This district's purpose and standards are defined in the Land Use Code."};
+}
+// "027  C012001" -> "27-C-12" (chart-block-lot; trailing 3 digits are the sub-lot)
+function fmtCBL(ias){
+  const s = String(ias||"").replace(/\s+/g,"");
+  const m = s.match(/^(\d{3})([A-Z]+)(\d{3})/i);
+  return m ? `${parseInt(m[1],10)}-${m[2].toUpperCase()}-${parseInt(m[3],10)}` : (s || null);
+}
+
 // Current Portland City Council roster, keyed by council district number.
 const COUNCILORS = {
   "1": {name:"Sarah Michniewicz", email:"smichniewicz@portlandmaine.gov"},
@@ -442,8 +496,8 @@ const CITYWIDE = [
 ];
 
 const SECTIONS = [
-  {id:"home",label:"Home"},{id:"ask",label:"Ask & Route"},{id:"tools",label:"Public Tools"},
-  {id:"report",label:"Report an Issue"},{id:"permits",label:"Permits"},
+  {id:"home",label:"Home"},{id:"ask",label:"Ask & Route"},{id:"property",label:"My Property"},
+  {id:"tools",label:"Public Tools"},{id:"report",label:"Report an Issue"},{id:"permits",label:"Permits"},
   {id:"meetings",label:"Meetings"},{id:"reps",label:"Your Reps"}
 ];
 const LABEL = Object.fromEntries(SECTIONS.map(s=>[s.id,s.label]));
@@ -466,6 +520,7 @@ function renderTabs(){
 }
 
 const HOME_ITEMS = [
+  ["property","My Property","Type an address to see its zoning district in plain English, historic-district status, and its parcel and tax records."],
   ["ask","Ask & Route","Describe your problem in plain words and get sent to the exact city service that handles it."],
   ["tools","Public Tools","Free and low-cost resources most residents don't know exist — things to borrow, places to go."],
   ["report","Report an Issue","See what neighbors have reported to 311 on a map, and report a pothole, light, or hazard."],
@@ -486,6 +541,7 @@ function homeView(){
     <div class="side">
       <div class="sidebox"><h3>Announcements</h3><ul><li>Winter parking ban runs Nov 1 – Apr 15.</li><li>City Council meets Mon, Jul 27 at 5 PM.</li><li>Bulky-item pickup permits available online.</li></ul></div>
       <div class="sidebox"><h3>Quick Links</h3><ul>
+        <li><a href="#property" onclick="event.preventDefault();go('property')">Look Up Your Zoning</a></li>
         <li><a href="https://seeclickfix.com/portland_2/report" target="_blank" rel="noopener">Report a Pothole</a></li>
         <li><a href="https://portlandme.rmcpay.com/" target="_blank" rel="noopener">Pay a Parking Ticket</a></li>
         <li><a href="https://www.portlandmaine.gov/trash-recycling" target="_blank" rel="noopener">Trash &amp; Recycling</a></li>
@@ -663,6 +719,82 @@ function repsView(){
     <div id="repOut"></div>`;
 }
 
+async function pointAttrs(layer,lon,lat,fields){
+  const all=await pointAllAttrs(layer,lon,lat,fields);
+  return all&&all.length?all[0]:null;
+}
+async function pointAllAttrs(layer,lon,lat,fields){
+  try{
+    const url=`${layer}/query?geometry=${lon},${lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=${fields}&returnGeometry=false&f=json`;
+    const r=await fetch(url); const d=await r.json();
+    return (d?.features||[]).map(f=>f.attributes);
+  }catch{return null;}
+}
+async function lookupProperty(e){
+  e.preventDefault();
+  const addr=document.getElementById("propAddr").value.trim(); if(!addr) return;
+  const out=document.getElementById("propOut"); out.innerHTML='<p class="small">Looking up…</p>';
+  try{
+    const q=/portland/i.test(addr)?addr:addr+", Portland, ME";
+    const geo=await (await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&q="+encodeURIComponent(q))).json();
+    if(!geo?.length) throw new Error("We couldn't find that address. Try more detail, e.g. '123 Congress St, Portland, ME'.");
+    const lat=parseFloat(geo[0].lat), lon=parseFloat(geo[0].lon), matched=geo[0].display_name;
+    const [parcelRows,hist,council]=await Promise.all([
+      pointAllAttrs(GIS+"/Zoning_Map_2026_05_01/FeatureServer/8",lon,lat,"*"),
+      pointAttrs(GIS+"/HistoricResources/Local_Historic_Districts/FeatureServer/2",lon,lat,"name"),
+      pointAttrs(GIS+"/Political/Council_Districts/FeatureServer/112",lon,lat,"NAME"),
+    ]);
+    // A parcel can return several rows; prefer one that actually carries a zone code.
+    const parcel=(parcelRows&&parcelRows.length)?(parcelRows.find(a=>(a.zone_recod||"").trim())||parcelRows[0]):null;
+    if(!parcel) throw new Error(`That address (${matched}) doesn't appear to land on a Portland tax parcel. Try the street address without an apartment or unit number.`);
+    const zone=(parcel.zone_recod||"").trim();
+    const zi=zoneInfo(zone);
+    const cbl=fmtCBL(parcel.ias_parcel_id);
+    const councilNum=council?String(council.NAME).trim():null;
+    const clr=councilNum?COUNCILORS[councilNum]:null;
+    const parcelAddr=[parcel.st_num,parcel.st_name].filter(Boolean).join(" ");
+    const facts=[
+      parcel.land_use?["Land use (assessor)",parcel.land_use]:null,
+      parcel.sqft?["Lot size",Number(String(parcel.sqft).replace(/[^0-9.]/g,""))?Number(String(parcel.sqft).replace(/[^0-9.]/g,"")).toLocaleString()+" sq ft":String(parcel.sqft)]:null,
+      parcel.yrblt?["Year built",parcel.yrblt]:null,
+      parcel.units?["Units",parcel.units]:null,
+      parcel.stories?["Stories",parcel.stories]:null
+    ].filter(Boolean);
+    const overlays=[];
+    if((parcel.shoreland||"").trim()) overlays.push("Shoreland overlay applies (extra water-protection rules)");
+    if((parcel.overlayzoning||"").trim()) overlays.push(`Overlay zoning: ${parcel.overlayzoning}`);
+    out.innerHTML = `
+      <p class="small" style="margin-top:12px">Matched address: ${esc(matched)}</p>
+      <div class="box"><div class="box-hd">Property Snapshot${parcelAddr?` &mdash; ${esc(parcelAddr)}`:""}</div><div class="box-bd">
+        <table class="itable"><tbody>
+          <tr><th style="width:170px">Zone</th><td>${zone?`<strong>${esc(zone)}</strong> &mdash; ${esc(zi.name)}`:"Not available for this parcel"}</td></tr>
+          ${zone?`<tr><th>What that means</th><td>${esc(zi.blurb)} Exact height, setback, and lot-coverage standards for ${esc(zone)} are in the Land Use Code &mdash; open it below.</td></tr>`:""}
+          <tr><th>Historic district</th><td>${hist?`<strong>Yes</strong> &mdash; ${esc(hist.name)} local historic district (exterior changes need Historic Preservation review)`:"No"}</td></tr>
+          <tr><th>Council district</th><td>District ${esc(councilNum||"&mdash;")}${clr?` &mdash; ${esc(clr.name)} (<a href="mailto:${esc(clr.email)}">${esc(clr.email)}</a>)`:""}</td></tr>
+          ${cbl?`<tr><th>Parcel (CBL)</th><td><strong>${esc(cbl)}</strong> <span class="small">&mdash; chart-block-lot; use this to search city records</span></td></tr>`:""}
+          ${facts.map(f=>`<tr><th>${esc(f[0])}</th><td>${esc(String(f[1]))}</td></tr>`).join("")}
+          ${overlays.length?`<tr><th>Overlays</th><td>${overlays.map(esc).join("<br>")}</td></tr>`:""}
+        </tbody></table>
+        <p style="margin-top:8px">
+          <a class="btn btn-primary" href="${LAND_USE_CODE_URL}" target="_blank" rel="noopener">Read the Zoning Rules &raquo;</a>
+          <a class="btn" href="${ZONING_MAP_URL}" target="_blank" rel="noopener">View GIS Zoning Map &raquo;</a>
+          <a class="btn" href="${ASSESSOR_URL}" target="_blank" rel="noopener">Property Tax Record &raquo;</a>
+        </p>
+        <p class="small">On the assessor site, search ${cbl?`CBL <strong>${esc(cbl)}</strong> or `:""}the street address. Zoning questions? Contact <a href="${ZONING_ADMIN_URL}" target="_blank" rel="noopener">Zoning Administration</a>.</p>
+      </div></div>
+      <div class="notice"><strong>Guidance, not an official determination.</strong> Zoning, historic, and parcel data come live from the City of Portland's GIS. Confirm anything important with Zoning Administration before you buy or build.</div>`;
+  }catch(err){ out.innerHTML=`<div class="notice">${esc(err.message||"Something went wrong.")}</div>`; }
+}
+function propertyView(){
+  return `<h1>What Can I Do With My Property?</h1><p class="lede">Type a Portland address to see its zoning district in plain English, whether it's in a historic district, and where its official parcel and tax records live.</p>
+    <form onsubmit="lookupProperty(event)"><table style="width:100%"><tbody><tr>
+      <td style="padding-right:6px"><input class="field" id="propAddr" type="text" placeholder="e.g. 389 Congress St" autocomplete="street-address"></td>
+      <td style="width:100px"><button class="btn btn-primary" type="submit" style="width:100%;padding:5px 10px">Look up</button></td>
+    </tr></tbody></table></form>
+    <p class="small">Live from the City of Portland's official GIS &mdash; free, nothing stored.</p>
+    <div id="propOut"></div>`;
+}
+
 function render(skipFocus){
   const activeId = document.activeElement && document.activeElement.id;
   const selStart = document.activeElement && document.activeElement.selectionStart;
@@ -672,6 +804,7 @@ function render(skipFocus){
   switch(section){
     case "home": html=homeView(); break;
     case "ask": html=askView(); break;
+    case "property": html=propertyView(); break;
     case "tools": html=toolsView(); break;
     case "report": html=reportView(); break;
     case "permits": html=permitsView(); break;
