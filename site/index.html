@@ -16,7 +16,7 @@
   script-src 'self' 'unsafe-inline' https://unpkg.com;
   style-src 'self' 'unsafe-inline' https://unpkg.com;
   img-src 'self' data: https://unpkg.com https://tile.openstreetmap.org https://*.tile.openstreetmap.org;
-  connect-src 'self' https://nominatim.openstreetmap.org https://gis.portlandmaine.gov;
+  connect-src 'self' https://nominatim.openstreetmap.org https://gis.portlandmaine.gov https://api.weather.gov;
   font-src 'self';
   object-src 'none';
   base-uri 'self';
@@ -317,6 +317,73 @@ input.field:focus { outline: 1px solid #1e4e8c; }
 .linkbtn:hover { color: #cc0000; }
 .linkbtn:focus-visible { outline: 2px solid #1e4e8c; outline-offset: 1px; }
 
+/* -------- status dashboard (Flood & Parking) --------
+   Fluid cards: they reflow at any container width, so they already work if the
+   960px shell is later made responsive. Status is never conveyed by colour
+   alone — every badge carries an icon glyph and a text label (WCAG 1.4.1). */
+.dash { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0; }
+.dash > .dcard {
+  flex: 1 1 280px;
+  min-width: 0;
+  border: 1px solid #b7c0cc;
+  background: #fff;
+}
+.dcard-hd {
+  background: #dfe6ee;
+  background-image: linear-gradient(to bottom, #eaf0f6, #cfd8e2);
+  border-bottom: 1px solid #b7c0cc;
+  padding: 5px 10px;
+  font-family: Verdana, sans-serif;
+  font-size: 11px;
+  font-weight: bold;
+  color: #003366;
+}
+.dcard-bd { padding: 10px 12px; }
+.dcard-bd p { margin: 0 0 6px; }
+.dcard-bd p:last-child { margin-bottom: 0; }
+
+/* Colour-coded status badges. The leading glyph and the words carry the
+   meaning; colour is reinforcement only. */
+.status {
+  display: inline-block;
+  padding: 3px 9px;
+  border: 1px solid #999;
+  border-radius: 2px;
+  font-size: 11px;
+  font-weight: bold;
+  line-height: 1.4;
+}
+.status .ico { font-style: normal; margin-right: 4px; }
+.st-ok    { background: #e3f0dc; border-color: #6f9a63; color: #1f4d15; }
+.st-warn  { background: #fbf0d8; border-color: #c9a24d; color: #6b4a06; }
+.st-alert { background: #f7dedd; border-color: #b4655f; color: #7d1b14; }
+.st-info  { background: #dde8f4; border-color: #6b8cb3; color: #123a63; }
+.st-none  { background: #eeeeee; border-color: #999; color: #444; }
+
+.factrow { margin: 6px 0 0; font-size: 11px; }
+.factrow dt { float: left; clear: left; width: 108px; color: #555; font-weight: bold; }
+.factrow dd { margin: 0 0 3px 116px; }
+.factrow:after { content: ""; display: block; clear: both; }
+
+/* Horizontal-scroll guard: long translated tables scroll inside their own
+   box instead of pushing the page sideways. */
+.tablewrap { overflow-x: auto; max-width: 100%; }
+
+/* filter bar for Development Near You */
+.filterbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin: 8px 0; }
+.filterbar .fgroup { flex: 0 1 auto; min-width: 0; }
+.filterbar label { display: block; font-size: 10px; color: #555; font-weight: bold; margin-bottom: 2px; }
+.filterbar select { font-family: Verdana, sans-serif; font-size: 11px; padding: 3px; border: 1px solid #888; background: #fff; max-width: 220px; }
+.filterbar select:focus-visible { outline: 2px solid #1e4e8c; outline-offset: 1px; }
+
+.dist { white-space: nowrap; color: #555; }
+.watch-on { background: #003366; background-image: none; color: #fff; border-color: #001f3f; }
+
+/* expandable detail row */
+.detail-cell { background: #f7f9fb; }
+.detail-cell .factrow dt { width: 130px; }
+.detail-cell .factrow dd { margin-left: 138px; }
+
 /* -------- info table (used for services/tools/meetings) -------- */
 .itable { border: 1px solid #b7c0cc; border-collapse: collapse; width: 100%; margin: 10px 0; background: #fff; }
 .itable th, .itable td { border: 1px solid #d4dae2; padding: 6px 8px; text-align: left; vertical-align: top; font-size: 11px; }
@@ -373,7 +440,7 @@ input.field:focus { outline: 1px solid #1e4e8c; }
 
 /* -------- map -------- */
 .map-wrap { border: 1px solid #999; height: 360px; margin: 10px 0; background: #eee; }
-#map { width: 100%; height: 100%; }
+#map, #devMap { width: 100%; height: 100%; }
 
 /* -------- checklist -------- */
 .check-list { list-style: none; padding-left: 0; margin: 6px 0; }
@@ -488,6 +555,74 @@ const HOUSE_URL = "https://www.mainelegislature.org/house/house/MemberProfiles/L
 const SENATE_URL = "https://legislature.maine.gov/senate-home-page/find-your-state-senator";
 const GIS = "https://gis.portlandmaine.gov/maps/rest/services";
 
+/* ============================================================
+   DATA SOURCES
+   Every feed the Flood & Parking dashboard and the My Property modules read
+   is declared here. `live:true` means the browser queries the real endpoint;
+   `live:false` means the city publishes no open API yet and the UI renders
+   clearly-labelled sample rows instead. To connect a real source later, flip
+   `live` and implement `fetch()` — no view code changes.
+   ============================================================ */
+const FLOOD_LAYER   = GIS + "/FEMA_FIRM_1986_Accepted/FeatureServer/2";
+const SNOWBAN_LAYER = GIS + "/Portland_SnowBan_Parking_Locations/FeatureServer/1";
+const DEVREVIEW_LAYER = GIS + "/Development_Review_Parcels/FeatureServer/8";
+const NWS_ALERTS = "https://api.weather.gov/alerts/active";
+
+// The FIRM in the city's GIS is the 1986 accepted panel set. FEMA revises
+// flood maps, so this is shown as guidance with the vintage stated and a link
+// to FEMA's current Map Service Center for an authoritative determination.
+const FLOOD_SOURCE_YEAR = "1986";
+const FEMA_MSC_URL = "https://msc.fema.gov/portal/search";
+const SNOWBAN_INFO_URL = "https://www.portlandmaine.gov/1094/Winter-Parking-Ban";
+
+/* Winter parking ban.
+   Portland declares bans storm-by-storm; there is no machine-readable feed,
+   so `declared` is a flag a nightly job (or a one-line edit) can flip. The
+   season window is computed from the date, so the card is honest year-round
+   without anyone touching it. */
+const PARKING_BAN = {
+  declared: false,          // flip to true when the city declares a ban
+  startsAt: null,           // e.g. "2026-12-04T22:00:00-05:00"
+  endsAt: null,             // e.g. "2026-12-05T06:00:00-05:00"
+  note: null,               // optional extra instruction from the city
+  seasonStart: { month: 11, day: 1 },   // Nov 1
+  seasonEnd:   { month: 4,  day: 15 }   // Apr 15
+};
+function banSeasonActive(d){
+  const m = d.getMonth() + 1, day = d.getDate();
+  const s = PARKING_BAN.seasonStart, e = PARKING_BAN.seasonEnd;
+  // season wraps the new year
+  if (m > s.month || (m === s.month && day >= s.day)) return true;
+  if (m < e.month || (m === e.month && day <= e.day)) return true;
+  return false;
+}
+
+// Building/trade permits live in Citizen Self Service (EnerGov), which has no
+// public read API and blocks browser requests. These sample rows are rendered
+// under an explicit "sample data" notice, matching how the 311 map and meeting
+// calendar already label their placeholders.
+const SAMPLE_BUILDING_PERMITS = [
+  {number:"BP-2025-01184", type:"Building — Alteration", status:"Issued", applied:"2025-09-12", issued:"2025-10-03", expires:"2026-10-03", description:"Interior alteration: replace load-bearing wall with engineered beam; new kitchen layout."},
+  {number:"EL-2025-00877", type:"Electrical", status:"Closed", applied:"2025-09-14", issued:"2025-09-20", expires:null, description:"Service upgrade to 200A, new panel and branch circuits for kitchen."},
+  {number:"PL-2026-00219", type:"Plumbing", status:"Under Review", applied:"2026-06-30", issued:null, expires:null, description:"Relocate kitchen sink and dishwasher supply/waste lines."}
+];
+
+// Plain-English reading of a FEMA flood-zone code.
+const FLOOD_ZONES = {
+  "A":   ["high","1% annual chance of flooding (the '100-year' floodplain). No detailed base flood elevation was set for this area."],
+  "AE":  ["high","1% annual chance of flooding, with a base flood elevation established."],
+  "AH":  ["high","1% annual chance of shallow ponding, typically 1–3 feet deep."],
+  "AO":  ["high","1% annual chance of shallow sheet flow flooding, typically 1–3 feet deep."],
+  "A99": ["high","1% annual chance area protected by a flood-control system still under construction."],
+  "AR":  ["high","Area with a temporarily reduced level of flood protection."],
+  "V":   ["high","Coastal high-hazard area: 1% annual chance flooding plus wave action."],
+  "VE":  ["high","Coastal high-hazard area with wave action and an established base flood elevation."],
+  "0.2 PCT ANNUAL CHANCE FLOOD HAZARD": ["moderate","0.2% annual chance of flooding (the '500-year' floodplain) — moderate risk."],
+  "X":   ["minimal","Outside the mapped 1% and 0.2% annual chance floodplains — minimal mapped risk."],
+  "OPEN WATER": ["na","Mapped as open water rather than a land parcel."],
+  "AREA NOT INCLUDED": ["na","Not included in the mapped study area."]
+};
+
 // Property & zoning lookup targets (all official city resources).
 const LAND_USE_CODE_URL = "https://www.portlandmaine.gov/land-use-code";   // full Land Use Code (PDF)
 const ZONING_MAP_URL   = "https://www.portlandmaine.gov/zoning-map";       // official interactive GIS zoning map
@@ -578,7 +713,7 @@ const I18N = { en: { strings: {
   "meta.desc":"A plain-language guide to getting things done in Portland, Maine: report issues, permits, meetings, and find your reps.",
   "topbar.tagline":"An independent civic guide · Portland, Maine",
   "masthead.sub":"Get your Portland, Maine problem to the right place — fast.",
-  "nav.home":"Home","nav.ask":"Ask & Route","nav.property":"My Property","nav.tools":"Public Tools",
+  "nav.home":"Home","nav.ask":"Ask & Route","nav.property":"My Property","nav.status":"Flood & Parking","nav.tools":"Public Tools",
   "nav.report":"Report an Issue","nav.permits":"Permits","nav.meetings":"Meetings","nav.reps":"Your Reps","nav.about":"About",
   "footer.unofficial":"Not an official City of Portland website.",
   "footer.body":"Independent guide pointing to real city services. Always confirm details with the city.",
@@ -597,6 +732,7 @@ const I18N = { en: { strings: {
   "home.desc.permits":"\"Do I even need a permit?\" — a plain-language read on your project, plus where to apply.",
   "home.desc.meetings":"Upcoming City Council and board meetings explained, with how and when to submit public comment.",
   "home.desc.reps":"Type your address to find your council district, state legislators, and trash day.",
+  "home.desc.status":"A quick status check for any address: FEMA flood zone, active flood advisories, and whether a winter parking ban is in effect.",
   "home.creator.h":"About the Creator",
   "home.creator.p":"Omari Brent &mdash; senior at the Waynflete School. I built this site (back-end support from Claude Code) because I was tired of digging through unorganized government websites. I hope it serves as a helpful tool that encourages civic engagement.",
   "home.creator.contact":"Questions or suggestions? Please reach out!",
@@ -702,6 +838,100 @@ const I18N = { en: { strings: {
   "prop.guidance":"Zoning, historic, and parcel data come live from the City of Portland's GIS. Confirm anything important with Zoning Administration before you buy or build.",
   "zone.fb.name":"See the Land Use Code",
   "zone.fb.blurb":"This district's purpose and standards are defined in the Land Use Code.",
+
+  "status.title":"Flood Zone &amp; Winter Parking",
+  "status.lede":"A quick status check for any Portland address: whether it sits in a FEMA flood zone, any flood advisories in effect right now, and whether a winter parking ban is on.",
+  "status.label":"Address to check",
+  "status.btn":"Check this address",
+  "status.detect":"Use my location",
+  "status.detecting":"Finding your location…",
+  "status.privacy":"Your address goes only to OpenStreetMap and the City of Portland's GIS, the same as the rest of this site. Nothing is stored on a server.",
+  "status.for":"Status for: {addr}",
+  "status.empty":"Enter an address above to see its flood zone, any active advisories, and the current parking-ban status.",
+  "err.geo":"We couldn't get your location. You can type an address instead.",
+  "status.flood.h":"Flood zone",
+  "status.flood.zone":"FEMA zone",
+  "status.flood.sfha":"Special Flood Hazard Area",
+  "status.flood.bfe":"Base flood elevation",
+  "status.flood.ft":"{n} ft",
+  "status.flood.none":"This address doesn't fall inside a mapped flood zone polygon.",
+  "status.flood.vintage":"Source: City of Portland GIS, FEMA FIRM ({year} accepted panels). FEMA revises flood maps — confirm anything that affects insurance or a purchase on FEMA's Map Service Center.",
+  "status.flood.fema":"Look it up on FEMA's Map Service Center",
+  "fz.A":"1% annual chance of flooding (the '100-year' floodplain). No detailed base flood elevation was set for this area.",
+  "fz.AE":"1% annual chance of flooding, with a base flood elevation established.",
+  "fz.AH":"1% annual chance of shallow ponding, typically 1–3 feet deep.",
+  "fz.AO":"1% annual chance of shallow sheet flow flooding, typically 1–3 feet deep.",
+  "fz.A99":"1% annual chance area protected by a flood-control system still under construction.",
+  "fz.AR":"Area with a temporarily reduced level of flood protection.",
+  "fz.V":"Coastal high-hazard area: 1% annual chance flooding plus wave action.",
+  "fz.VE":"Coastal high-hazard area with wave action and an established base flood elevation.",
+  "fz.0.2 PCT ANNUAL CHANCE FLOOD HAZARD":"0.2% annual chance of flooding (the '500-year' floodplain) — moderate risk.",
+  "fz.X":"Outside the mapped 1% and 0.2% annual chance floodplains — minimal mapped risk.",
+  "fz.OPEN WATER":"Mapped as open water rather than a land parcel.",
+  "fz.AREA NOT INCLUDED":"Not included in the mapped study area.",
+  "risk.high":"High risk","risk.moderate":"Moderate risk","risk.minimal":"Minimal risk","risk.na":"Not applicable",
+  "status.sfha.yes":"Yes — flood insurance is generally required for a federally backed mortgage",
+  "status.sfha.no":"No",
+  "status.adv.h":"Flood advisories",
+  "status.adv.none":"No flood advisories in effect for this location",
+  "status.adv.active":"{n} advisory in effect","status.adv.activeN":"{n} advisories in effect",
+  "status.adv.until":"In effect until {when}",
+  "status.adv.src":"Live from the National Weather Service.",
+  "status.ban.h":"Winter parking ban",
+  "status.ban.on":"Ban in effect",
+  "status.ban.off":"No ban in effect",
+  "status.ban.offseason":"Off season",
+  "status.ban.seasonOn":"Ban season runs Nov 1 – Apr 15. No ban is currently declared.",
+  "status.ban.seasonOff":"Outside the Nov 1 – Apr 15 ban season.",
+  "status.ban.window":"In effect {from} to {to}",
+  "status.ban.rules":"When a ban is called, move your car off the street or it may be ticketed and towed. The city opens designated lots and on-street stretches for free parking during the ban.",
+  "status.ban.more":"Winter parking ban details",
+  "status.ban.lots":"Nearest ban parking ({n} within {mi} mi)",
+  "status.ban.lotsNone":"No designated ban parking found within {mi} miles of this address.",
+  "status.ban.th.name":"Location","status.ban.th.type":"Type","status.ban.th.hours":"Hours","status.ban.th.fee":"Fee","status.ban.th.dist":"Distance",
+  "status.ban.free":"Free","status.ban.paid":"Fee applies",
+  "unit.mi":"{n} mi",
+
+  "prop.permits.h":"Permits &amp; planning records for this property",
+  "prop.permits.none":"No planning or site-plan records are recorded against this parcel.",
+  "prop.permits.th.number":"Record","prop.permits.th.type":"Type","prop.permits.th.status":"Status",
+  "prop.permits.th.applied":"Applied","prop.permits.th.expires":"Expires",
+  "prop.permits.more":"Details","prop.permits.hide":"Hide details",
+  "prop.permits.desc":"Description","prop.permits.completed":"Completed",
+  "prop.permits.src":"Live from the City of Portland's development-review GIS layer.",
+  "prop.permits.docs":"Look up this record in Citizen Self Service",
+  "prop.permits.bldgH":"Building &amp; trade permits",
+  "prop.permits.sample.b":"Sample data.",
+  "prop.permits.sample":"Building, electrical, and plumbing permits live in Citizen Self Service, which has no public data feed. The rows below are examples of the format — search the portal for this address to see real permits.",
+  "prop.permits.issued":"Issued",
+
+  "dev.h":"Development near you",
+  "dev.lede":"Active and recent development-review projects near this address, closest first.",
+  "dev.radius":"Search radius",
+  "dev.type":"Project type",
+  "dev.status":"Status",
+  "dev.all":"All",
+  "dev.count":"{n} projects within {mi} mi","dev.count1":"1 project within {mi} mi",
+  "dev.none":"No development-review projects match those filters within {mi} miles.",
+  "dev.th.project":"Project","dev.th.type":"Type","dev.th.status":"Status","dev.th.applied":"Applied","dev.th.dist":"Distance",
+  "dev.watch":"Watch","dev.watching":"Watching",
+  "dev.watchNote":"Watched projects are saved in this browser so you can spot changes when you come back. This site has no server, so it can't send email or text alerts.",
+  "dev.watchCount":"You're watching {n} project(s).",
+  "dev.src":"Live from the City of Portland's development-review GIS layer. The city classifies these by review type rather than by land use, so the type filter uses the city's own categories.",
+  "dev.docs":"Planning Board agendas &amp; documents",
+  "dev.mapLabel":"Map of nearby development projects",
+  "record.verbatim":"Record numbers, addresses, and project descriptions are quoted exactly as the city filed them, so they stay in English.",
+
+  "pstatus.Submitted":"Submitted","pstatus.In Review":"In review","pstatus.On Hold":"On hold",
+  "pstatus.Payment Pending":"Payment pending","pstatus.Approved":"Approved",
+  "pstatus.Approved by Board":"Approved by board",
+  "pstatus.Approved with Conditions":"Approved with conditions",
+  "pstatus.Approved by Board with Conditions":"Approved by board with conditions",
+  "pstatus.AA- Approved by Staff with Conditions":"Approved by staff with conditions",
+  "pstatus.Review Expired":"Review expired","pstatus.Void":"Void","pstatus.Withdrawn":"Withdrawn",
+  "pclass.Major Site Plan Development":"Major site plan","pclass.Minor Site Plan Development":"Minor site plan",
+  "pclass.Major Site Plan Amendment":"Major site plan amendment","pclass.Minor Site Plan Amendment":"Minor site plan amendment",
+  "pclass.Subdivision":"Subdivision","pclass.Subdivision Amendment":"Subdivision amendment",
   "about.title":"About Portland Problems",
   "about.lede":"Portland Problems is an <strong>unofficial, independent civic resource</strong> for Portland, Maine. It is not run by, endorsed by, or affiliated with the City of Portland. Its only job is to translate city rules and services into plain English and point you to the real, official place to act.",
   "about.notice.b":"Official information takes precedence.",
@@ -776,7 +1006,7 @@ function renderChrome(){
      <p class="small">&copy; 2026 Portland Problems · ${t("footer.updated")} · <a href="#about" onclick="event.preventDefault();go('about')">${t("footer.about")}</a></p>`;
 }
 
-const SECTIONS = ["home","ask","property","tools","report","permits","meetings","reps","about"];
+const SECTIONS = ["home","ask","property","status","tools","report","permits","meetings","reps","about"];
 const label = id => t("nav."+id);
 
 let section = "home";
@@ -795,7 +1025,7 @@ function renderTabs(){
     (section!=="home"?` &raquo; ${label(section)}`:"");
 }
 
-const HOME_IDS = ["property","ask","tools","report","permits","meetings","reps"];
+const HOME_IDS = ["property","status","ask","tools","report","permits","meetings","reps"];
 
 function homeView(){
   return `<div class="two-col"><div class="main">
@@ -954,6 +1184,106 @@ function meetingsView(){
       <p><a href="${m.agendaUrl}" target="_blank" rel="noopener">${t("meetings.agenda")} &raquo;</a></p></div></div>`).join("")}</div>`;
 }
 
+/* ---------- shared geo helpers ----------
+   The address the visitor last looked up is kept in the browser only, so the
+   dashboard and My Property can prefill instead of asking twice. Nothing is
+   sent anywhere except the same city GIS / OSM calls the site already makes. */
+let lastAddr = null;
+try { const s = localStorage.getItem("pp_addr"); if (s) lastAddr = JSON.parse(s); } catch {}
+function rememberAddr(a){ lastAddr = a; try { localStorage.setItem("pp_addr", JSON.stringify(a)); } catch {} }
+
+async function geocodePortland(addr){
+  const q = /portland/i.test(addr) ? addr : addr + ", Portland, ME";
+  const geo = await (await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&q=" + encodeURIComponent(q))).json();
+  if (!geo || !geo.length) throw new Error(t("err.addr"));
+  const a = { lat: parseFloat(geo[0].lat), lon: parseFloat(geo[0].lon), matched: geo[0].display_name, query: addr };
+  rememberAddr(a);
+  return a;
+}
+async function reverseGeocode(lat, lon){
+  try {
+    const d = await (await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)).json();
+    return d && d.display_name ? d.display_name : `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+  } catch { return `${lat.toFixed(5)}, ${lon.toFixed(5)}`; }
+}
+function milesBetween(lat1, lon1, lat2, lon2){
+  const R = 3958.8, rad = Math.PI / 180;
+  const dLat = (lat2 - lat1) * rad, dLon = (lon2 - lon1) * rad;
+  const s = Math.sin(dLat/2) ** 2 + Math.cos(lat1*rad) * Math.cos(lat2*rad) * Math.sin(dLon/2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(s));
+}
+// Bounding box for a radius search; results are then filtered to a true circle.
+function envelopeFor(lat, lon, miles){
+  const dLat = miles / 69.05;
+  const dLon = miles / (69.05 * Math.max(0.2, Math.cos(lat * Math.PI / 180)));
+  return [lon - dLon, lat - dLat, lon + dLon, lat + dLat].join(",");
+}
+async function layerQuery(layer, params){
+  const d = await (await fetch(layer + "/query?" + new URLSearchParams(Object.assign({ f: "json" }, params)))).json();
+  if (d && d.error) throw new Error(d.error.message || "GIS query failed");
+  return d;
+}
+const epochDate = v => (v == null || v === "" ? null : new Date(Number(v)));
+function fmtDay(v){
+  const d = v instanceof Date ? v : epochDate(v);
+  if (!d || isNaN(d)) return null;
+  return d.toLocaleDateString(LOCALES[lang] || "en-US", { year: "numeric", month: "short", day: "numeric" });
+}
+
+/* ---------- source fetchers (see DATA_SOURCES notes above) ---------- */
+async function fetchFloodZone(lat, lon){
+  const d = await layerQuery(FLOOD_LAYER, {
+    geometry: lon + "," + lat, geometryType: "esriGeometryPoint", inSR: "4326",
+    spatialRel: "esriSpatialRelIntersects",
+    outFields: "FLD_ZONE,SFHA_TF,STATIC_BFE,Zone_Labels", returnGeometry: "false"
+  });
+  return (d.features && d.features[0] && d.features[0].attributes) || null;
+}
+async function fetchFloodAdvisories(lat, lon){
+  const d = await (await fetch(`${NWS_ALERTS}?point=${lat},${lon}`)).json();
+  const floody = /flood|surge|hurricane|tropical|coastal/i;
+  return (d.features || []).map(f => f.properties).filter(p => floody.test(p.event || ""));
+}
+async function fetchSnowBanLots(lat, lon, miles){
+  const d = await layerQuery(SNOWBAN_LAYER, {
+    geometry: envelopeFor(lat, lon, miles), geometryType: "esriGeometryEnvelope",
+    inSR: "4326", outSR: "4326", spatialRel: "esriSpatialRelIntersects",
+    outFields: "NAME,TYPE,FEE,Hours,Ownership,Status",
+    returnCentroid: "true", returnGeometry: "false"
+  });
+  return (d.features || []).map(f => {
+    const c = f.centroid || {};
+    return Object.assign({}, f.attributes, {
+      dist: (c.y != null) ? milesBetween(lat, lon, c.y, c.x) : null
+    });
+  }).filter(r => r.dist == null || r.dist <= miles).sort((a, b) => (a.dist ?? 99) - (b.dist ?? 99));
+}
+const DEV_FIELDS = "PLANNUMBER,ADDR,PLANSTATUS,PLANWORKCLASS,DESCRIPTION,APPLICATIONDATE,EXPIREDATE,COMPLETEDATE";
+// Planning records recorded against this exact parcel (point-in-polygon).
+async function fetchPlanningRecords(lat, lon){
+  const d = await layerQuery(DEVREVIEW_LAYER, {
+    geometry: lon + "," + lat, geometryType: "esriGeometryPoint", inSR: "4326",
+    spatialRel: "esriSpatialRelIntersects", outFields: DEV_FIELDS, returnGeometry: "false"
+  });
+  return (d.features || []).map(f => f.attributes)
+    .sort((a, b) => (b.APPLICATIONDATE || 0) - (a.APPLICATIONDATE || 0));
+}
+// Projects within `miles` of the address, with true distance.
+async function fetchNearbyDevelopment(lat, lon, miles){
+  const d = await layerQuery(DEVREVIEW_LAYER, {
+    geometry: envelopeFor(lat, lon, miles), geometryType: "esriGeometryEnvelope",
+    inSR: "4326", outSR: "4326", spatialRel: "esriSpatialRelIntersects",
+    outFields: DEV_FIELDS, returnCentroid: "true", returnGeometry: "false"
+  });
+  return (d.features || []).map(f => {
+    const c = f.centroid || {};
+    return Object.assign({}, f.attributes, {
+      lat: c.y, lon: c.x,
+      dist: (c.y != null) ? milesBetween(lat, lon, c.y, c.x) : null
+    });
+  }).filter(r => r.dist != null && r.dist <= miles).sort((a, b) => a.dist - b.dist);
+}
+
 async function pointField(layer,lon,lat,field){
   try{
     const url=`${layer}/query?geometry=${lon},${lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=${field}&returnGeometry=false&f=json`;
@@ -966,10 +1296,8 @@ async function lookupReps(e){
   const addr=document.getElementById("repAddr").value.trim(); if(!addr) return;
   const out=document.getElementById("repOut"); out.innerHTML=`<p class="small">${t("lookup.loading")}</p>`;
   try{
-    const q=/portland/i.test(addr)?addr:addr+", Portland, ME";
-    const geo=await (await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&q="+encodeURIComponent(q))).json();
-    if(!geo?.length) throw new Error(t("err.addr"));
-    const lat=parseFloat(geo[0].lat), lon=parseFloat(geo[0].lon), matched=geo[0].display_name;
+    const g=await geocodePortland(addr);
+    const lat=g.lat, lon=g.lon, matched=g.matched;
     const [council,house,senate,trash]=await Promise.all([
       pointField(GIS+"/Political/Council_Districts/FeatureServer/112",lon,lat,"NAME"),
       pointField(GIS+"/Political/State_House_Districts/FeatureServer/6",lon,lat,"DISTRICT"),
@@ -1030,10 +1358,8 @@ async function lookupProperty(e){
   const addr=document.getElementById("propAddr").value.trim(); if(!addr) return;
   const out=document.getElementById("propOut"); out.innerHTML=`<p class="small">${t("lookup.loading")}</p>`;
   try{
-    const q=/portland/i.test(addr)?addr:addr+", Portland, ME";
-    const geo=await (await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&q="+encodeURIComponent(q))).json();
-    if(!geo?.length) throw new Error(t("err.addr"));
-    const lat=parseFloat(geo[0].lat), lon=parseFloat(geo[0].lon), matched=geo[0].display_name;
+    const g=await geocodePortland(addr);
+    const lat=g.lat, lon=g.lon, matched=g.matched;
     const [parcelRows,hist,council]=await Promise.all([
       pointAllAttrs(GIS+"/Zoning_Map_2026_05_01/FeatureServer/8",lon,lat,"*"),
       pointAttrs(GIS+"/HistoricResources/Local_Historic_Districts/FeatureServer/2",lon,lat,"name"),
@@ -1077,7 +1403,15 @@ async function lookupProperty(e){
         </p>
         <p class="small">${t("prop.assessorNote",{cblpart:cbl?t("prop.cblOr",{cbl:esc(cbl)}):"",url:ZONING_ADMIN_URL})}</p>
       </div></div>
-      <div class="notice"><strong>${t("prop.guidance.b")}</strong> ${t("prop.guidance")}</div>`;
+      <div class="notice"><strong>${t("prop.guidance.b")}</strong> ${t("prop.guidance")}</div>
+      <div id="propPermits"></div>
+      <div id="propDev"></div>`;
+    // Load the two modules against the same parcel the snapshot just described.
+    propCoords = { lat, lon, matched };
+    permitOpen = {};
+    devState = { miles: devState.miles, type: "All", status: "All", rows: null };
+    loadPropertyPermits(lat, lon);
+    loadDevelopment();
   }catch(err){ out.innerHTML=`<div class="notice">${esc(err.message||t("err.generic"))}</div>`; }
 }
 function propertyView(){
@@ -1089,6 +1423,334 @@ function propertyView(){
     </tr></tbody></table></form>
     <p class="small">${t("prop.src")}</p>
     <div id="propOut"></div>`;
+}
+
+/* ==================== Flood & Parking dashboard ==================== */
+let statusData = null;
+
+function badge(kind, icon, text){
+  return `<span class="status st-${kind}"><i class="ico" aria-hidden="true">${icon}</i>${text}</span>`;
+}
+// Translate an official record value, falling back to the value itself.
+function lookupOr(prefix, v){
+  if (v == null || String(v).trim() === "") return null;
+  const raw = String(v).trim(), key = prefix + raw, s = tRaw(key);
+  return (s === key || s === undefined) ? raw : s;
+}
+// Translated string with an explicit fallback (used where the fallback is
+// prose rather than the lookup value itself).
+function tOr(key, fallback){
+  const s = tRaw(key);
+  return (s === key || s === undefined) ? fallback : s;
+}
+function permitBadge(s){
+  const v = String(s || "").trim();
+  const label = lookupOr("pstatus.", v) || "—";
+  let kind = "info", icon = "•";
+  if (/approved|issued|closed|complete/i.test(v)) { kind = "ok"; icon = "✓"; }
+  else if (/review|submitted|pending|hold/i.test(v)) { kind = "warn"; icon = "◷"; }
+  else if (/void|withdraw|expired|denied/i.test(v)) { kind = "none"; icon = "✕"; }
+  return `<span class="status st-${kind}"><i class="ico" aria-hidden="true">${icon}</i>${esc(label)}</span>`;
+}
+
+function floodCard(f){
+  let badgeHtml, body;
+  const code = f && f.FLD_ZONE ? String(f.FLD_ZONE).trim() : "";
+  if (!code) {
+    badgeHtml = badge("none", "○", t("risk.na"));
+    body = `<p>${t("status.flood.none")}</p>`;
+  } else {
+    const entry = FLOOD_ZONES[code] || FLOOD_ZONES[code.toUpperCase()] || null;
+    const risk = entry ? entry[0] : "na";
+    const kind = risk === "high" ? "alert" : risk === "moderate" ? "warn" : risk === "minimal" ? "ok" : "none";
+    const icon = risk === "high" ? "▲" : risk === "moderate" ? "◆" : risk === "minimal" ? "✓" : "○";
+    badgeHtml = badge(kind, icon, t("risk." + risk));
+    const sfha = String(f.SFHA_TF || "").trim().toUpperCase() === "T";
+    const bfe = (f.STATIC_BFE != null && f.STATIC_BFE > -9000) ? f.STATIC_BFE : null;
+    const blurb = tOr("fz." + code, entry ? entry[1] : "");
+    body = `${blurb ? `<p>${esc(blurb)}</p>` : ""}
+      <dl class="factrow">
+        <dt>${t("status.flood.zone")}</dt><dd><strong>${esc(code)}</strong></dd>
+        <dt>${t("status.flood.sfha")}</dt><dd>${sfha ? t("status.sfha.yes") : t("status.sfha.no")}</dd>
+        ${bfe != null ? `<dt>${t("status.flood.bfe")}</dt><dd>${t("status.flood.ft", { n: bfe })}</dd>` : ""}
+      </dl>`;
+  }
+  return `<div class="dcard"><div class="dcard-hd">${t("status.flood.h")}</div><div class="dcard-bd">
+    <p>${badgeHtml}</p>${body}
+    <p class="small">${t("status.flood.vintage", { year: FLOOD_SOURCE_YEAR })}</p>
+    <p><a class="btn" href="${FEMA_MSC_URL}" target="_blank" rel="noopener">${t("status.flood.fema")} &raquo;</a></p>
+  </div></div>`;
+}
+
+function advisoryCard(list){
+  const n = list ? list.length : 0;
+  const badgeHtml = n
+    ? badge("alert", "▲", n === 1 ? t("status.adv.active", { n }) : t("status.adv.activeN", { n }))
+    : badge("ok", "✓", t("status.adv.none"));
+  const body = n ? list.map(p => `<div class="panel">
+      <p><strong>${esc(p.event || "")}</strong></p>
+      ${p.headline ? `<p class="small">${esc(p.headline)}</p>` : ""}
+      ${p.expires ? `<p class="small">${t("status.adv.until", { when: esc(fmtDate(p.expires)) })}</p>` : ""}
+    </div>`).join("") : "";
+  return `<div class="dcard"><div class="dcard-hd">${t("status.adv.h")}</div><div class="dcard-bd">
+    <p>${badgeHtml}</p>${body}
+    <p class="small">${t("status.adv.src")}</p></div></div>`;
+}
+
+function banCard(lots){
+  const season = banSeasonActive(new Date());
+  const on = !!PARKING_BAN.declared;
+  const badgeHtml = on ? badge("alert", "▲", t("status.ban.on"))
+    : season ? badge("ok", "✓", t("status.ban.off"))
+    : badge("none", "○", t("status.ban.offseason"));
+  let body = "";
+  if (on) {
+    body += `<p>${t("status.ban.rules")}</p>`;
+    if (PARKING_BAN.startsAt && PARKING_BAN.endsAt)
+      body += `<p><strong>${t("status.ban.window", { from: esc(fmtDate(PARKING_BAN.startsAt)), to: esc(fmtDate(PARKING_BAN.endsAt)) })}</strong></p>`;
+    if (PARKING_BAN.note) body += `<p>${esc(PARKING_BAN.note)}</p>`;
+  } else {
+    body += `<p>${season ? t("status.ban.seasonOn") : t("status.ban.seasonOff")}</p>`;
+  }
+  if (lots && !lots.length) body += `<p class="small">${t("status.ban.lotsNone", { mi: 1 })}</p>`;
+  return `<div class="dcard"><div class="dcard-hd">${t("status.ban.h")}</div><div class="dcard-bd">
+    <p>${badgeHtml}</p>${body}
+    <p><a class="btn" href="${SNOWBAN_INFO_URL}" target="_blank" rel="noopener">${t("status.ban.more")} &raquo;</a></p>
+  </div></div>`;
+}
+
+// The ban-parking list sits full width under the cards: a five-column table is
+// unreadable squeezed into a ~300px dashboard card.
+function banLotsTable(lots){
+  if (!lots || !lots.length) return "";
+  return `<div class="box"><div class="box-hd">${t("status.ban.lots", { n: lots.length, mi: 1 })}</div><div class="box-bd">
+    <div class="tablewrap"><table class="itable"><thead><tr>
+      <th scope="col">${t("status.ban.th.name")}</th><th scope="col">${t("status.ban.th.type")}</th>
+      <th scope="col">${t("status.ban.th.hours")}</th><th scope="col">${t("status.ban.th.fee")}</th>
+      <th scope="col">${t("status.ban.th.dist")}</th></tr></thead><tbody>
+      ${lots.slice(0, 10).map(l => `<tr>
+        <td>${esc(l.NAME || "—")}</td><td>${esc(String(l.TYPE || "").trim() || "—")}</td>
+        <td>${esc(l.Hours || "—")}</td>
+        <td>${/^no$/i.test(String(l.FEE || "").trim()) ? t("status.ban.free") : t("status.ban.paid")}</td>
+        <td class="dist">${l.dist != null ? t("unit.mi", { n: l.dist.toFixed(2) }) : "—"}</td></tr>`).join("")}
+    </tbody></table></div></div></div>`;
+}
+
+function statusDash(){
+  const d = statusData;
+  if (!d) return `<div class="panel">${t("status.empty")}</div>`;
+  return `<p class="small" style="margin-top:10px">${t("status.for", { addr: esc(d.addr.matched) })}</p>
+    <div class="dash">${floodCard(d.flood)}${advisoryCard(d.advisories)}${banCard(d.lots)}</div>
+    ${banLotsTable(d.lots)}`;
+}
+
+async function runStatus(getAddr){
+  const out = document.getElementById("statusOut");
+  out.innerHTML = `<p class="small">${t("lookup.loading")}</p>`;
+  try {
+    const a = await getAddr();
+    const [flood, advisories, lots] = await Promise.all([
+      fetchFloodZone(a.lat, a.lon).catch(() => null),
+      fetchFloodAdvisories(a.lat, a.lon).catch(() => []),
+      fetchSnowBanLots(a.lat, a.lon, 1).catch(() => null)
+    ]);
+    statusData = { addr: a, flood, advisories, lots };
+    out.innerHTML = statusDash();
+  } catch (err) {
+    out.innerHTML = `<div class="notice">${esc(err.message || t("err.generic"))}</div>`;
+  }
+}
+function lookupStatus(e){
+  if (e) e.preventDefault();
+  const addr = document.getElementById("statusAddr").value.trim();
+  if (!addr) return;
+  return runStatus(() => geocodePortland(addr));
+}
+function detectLocation(){
+  const out = document.getElementById("statusOut");
+  if (!navigator.geolocation) { out.innerHTML = `<div class="notice">${t("err.geo")}</div>`; return; }
+  out.innerHTML = `<p class="small">${t("status.detecting")}</p>`;
+  navigator.geolocation.getCurrentPosition(
+    async pos => {
+      const lat = pos.coords.latitude, lon = pos.coords.longitude;
+      await runStatus(async () => {
+        const matched = await reverseGeocode(lat, lon);
+        const a = { lat, lon, matched, query: matched };
+        rememberAddr(a);
+        return a;
+      });
+      const f = document.getElementById("statusAddr");
+      if (f && statusData) f.value = statusData.addr.matched;
+    },
+    () => { out.innerHTML = `<div class="notice">${t("err.geo")}</div>`; }
+  );
+}
+function statusView(){
+  const a = statusData ? statusData.addr : lastAddr;
+  return `<h1>${t("status.title")}</h1><p class="lede">${t("status.lede")}</p>
+    <form onsubmit="lookupStatus(event)"><table style="width:100%"><tbody><tr>
+      <td style="padding-right:6px">
+        <label class="sr-only" for="statusAddr">${t("status.label")}</label>
+        <input class="field" id="statusAddr" type="text" placeholder="${esc(t("reps.ph"))}" autocomplete="street-address" value="${a ? esc(a.query || a.matched || "") : ""}"></td>
+      <td style="width:130px;padding-right:6px"><button class="btn btn-primary" type="submit" style="width:100%;padding:5px 8px">${t("status.btn")}</button></td>
+      <td style="width:120px"><button class="btn" type="button" style="width:100%;padding:5px 8px" onclick="detectLocation()">${t("status.detect")}</button></td>
+    </tr></tbody></table></form>
+    <p class="small">${t("status.privacy")}</p>
+    <div id="statusOut" aria-live="polite">${statusDash()}</div>`;
+}
+
+/* ============ My Property: permits + development modules ============ */
+let propCoords = null, propPermits = [], permitOpen = {};
+let devState = { miles: 1, type: "All", status: "All", rows: null };
+let devMapObj = null;
+let watchList = [];
+try { watchList = JSON.parse(localStorage.getItem("pp_watch") || "[]"); } catch {}
+
+function togglePermit(num){
+  permitOpen[num] = !permitOpen[num];
+  const el = document.getElementById("propPermits");
+  if (el) el.innerHTML = permitsModule(propPermits);
+}
+function permitsModule(rows){
+  const live = !rows.length
+    ? `<p>${t("prop.permits.none")}</p>`
+    : `<div class="tablewrap"><table class="itable"><thead><tr>
+        <th scope="col">${t("prop.permits.th.number")}</th><th scope="col">${t("prop.permits.th.type")}</th>
+        <th scope="col">${t("prop.permits.th.status")}</th><th scope="col">${t("prop.permits.th.applied")}</th>
+        <th scope="col">${t("prop.permits.th.expires")}</th>
+        <th scope="col"><span class="sr-only">${t("prop.permits.more")}</span></th>
+      </tr></thead><tbody>${rows.map(r => {
+        const num = String(r.PLANNUMBER || ""), open = !!permitOpen[num];
+        return `<tr>
+          <td><strong>${esc(num)}</strong></td>
+          <td>${esc(lookupOr("pclass.", r.PLANWORKCLASS) || "—")}</td>
+          <td>${permitBadge(r.PLANSTATUS)}</td>
+          <td>${esc(fmtDay(r.APPLICATIONDATE) || "—")}</td>
+          <td>${esc(fmtDay(r.EXPIREDATE) || "—")}</td>
+          <td><button type="button" class="linkbtn" aria-expanded="${open}" onclick="togglePermit(${esc(JSON.stringify(num))})">${open ? t("prop.permits.hide") : t("prop.permits.more")}</button></td>
+        </tr>${open ? `<tr><td class="detail-cell" colspan="6">
+          <dl class="factrow">
+            ${r.DESCRIPTION ? `<dt>${t("prop.permits.desc")}</dt><dd>${esc(r.DESCRIPTION)}</dd>` : ""}
+            ${r.ADDR ? `<dt>${t("report.th.loc")}</dt><dd>${esc(String(r.ADDR).trim())}</dd>` : ""}
+            ${fmtDay(r.COMPLETEDATE) ? `<dt>${t("prop.permits.completed")}</dt><dd>${esc(fmtDay(r.COMPLETEDATE))}</dd>` : ""}
+          </dl>
+          <p style="margin-top:6px"><a class="btn" href="${PERMITS_PORTAL_URL}" target="_blank" rel="noopener">${t("prop.permits.docs")} &raquo;</a></p>
+        </td></tr>` : ""}`;
+      }).join("")}</tbody></table></div>
+      <p class="small">${t("prop.permits.src")} ${lang !== "en" ? t("record.verbatim") : ""}</p>`;
+  return `<div class="box"><div class="box-hd">${t("prop.permits.h")}</div><div class="box-bd">${live}
+    <h3 style="font-size:12px;font-family:Verdana,sans-serif;text-transform:uppercase;color:#663300;margin-top:14px">${t("prop.permits.bldgH")}</h3>
+    <div class="notice"><strong>${t("prop.permits.sample.b")}</strong> ${t("prop.permits.sample")}</div>
+    <div class="tablewrap"><table class="itable"><thead><tr>
+      <th scope="col">${t("prop.permits.th.number")}</th><th scope="col">${t("prop.permits.th.type")}</th>
+      <th scope="col">${t("prop.permits.th.status")}</th><th scope="col">${t("prop.permits.issued")}</th>
+      <th scope="col">${t("prop.permits.th.expires")}</th></tr></thead><tbody>
+      ${SAMPLE_BUILDING_PERMITS.map(p => `<tr>
+        <td><strong>${esc(p.number)}</strong></td><td>${esc(p.type)}</td>
+        <td>${permitBadge(p.status)}</td>
+        <td>${esc(p.issued ? fmtDay(new Date(p.issued)) : "—")}</td>
+        <td>${esc(p.expires ? fmtDay(new Date(p.expires)) : "—")}</td></tr>`).join("")}
+    </tbody></table></div>
+    <p><a class="btn" href="${PERMITS_PORTAL_URL}" target="_blank" rel="noopener">${t("permits.start")} &raquo;</a></p>
+  </div></div>`;
+}
+async function loadPropertyPermits(lat, lon){
+  const el = document.getElementById("propPermits");
+  if (!el) return;
+  el.innerHTML = `<p class="small">${t("lookup.loading")}</p>`;
+  try { propPermits = await fetchPlanningRecords(lat, lon); } catch { propPermits = []; }
+  el.innerHTML = permitsModule(propPermits);
+}
+
+function toggleWatch(num){
+  const i = watchList.indexOf(num);
+  if (i >= 0) watchList.splice(i, 1); else watchList.push(num);
+  try { localStorage.setItem("pp_watch", JSON.stringify(watchList)); } catch {}
+  renderDev();
+}
+function setDevRadius(v){ devState.miles = parseFloat(v); loadDevelopment(); }
+function setDevFilter(k, v){ devState[k] = v; renderDev(); }
+function devFiltered(){
+  return (devState.rows || []).filter(r =>
+    (devState.type === "All" || r.PLANWORKCLASS === devState.type) &&
+    (devState.status === "All" || r.PLANSTATUS === devState.status));
+}
+function initDevMap(rows, center){
+  const el = document.getElementById("devMap");
+  if (!el || !window.L || !center) return;
+  if (devMapObj) { devMapObj.remove(); devMapObj = null; }
+  devMapObj = L.map(el, { scrollWheelZoom: false }).setView([center.lat, center.lon], 14);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: '&copy; OpenStreetMap contributors' }).addTo(devMapObj);
+  L.circleMarker([center.lat, center.lon], { radius: 7, color: "#cc0000", fillColor: "#cc0000", fillOpacity: 0.85 })
+    .addTo(devMapObj).bindPopup(esc(center.matched || ""));
+  rows.forEach(r => {
+    if (r.lat == null) return;
+    L.marker([r.lat, r.lon]).addTo(devMapObj).bindPopup(
+      `<strong>${esc(r.PLANNUMBER || "")}</strong><br>${esc(String(r.ADDR || "").trim())}<br>${esc(lookupOr("pstatus.", r.PLANSTATUS) || "")}`);
+  });
+  setTimeout(() => devMapObj && devMapObj.invalidateSize(), 200);
+}
+function devRow(r){
+  const num = String(r.PLANNUMBER || ""), on = watchList.includes(num);
+  const d = r.DESCRIPTION ? String(r.DESCRIPTION) : "";
+  return `<tr>
+    <td><strong>${esc(num)}</strong><div class="small">${esc(String(r.ADDR || "").trim())}</div>
+      ${d ? `<div class="small">${esc(d.slice(0, 140))}${d.length > 140 ? "…" : ""}</div>` : ""}</td>
+    <td>${esc(lookupOr("pclass.", r.PLANWORKCLASS) || "—")}</td>
+    <td>${permitBadge(r.PLANSTATUS)}</td>
+    <td>${esc(fmtDay(r.APPLICATIONDATE) || "—")}</td>
+    <td class="dist">${r.dist != null ? t("unit.mi", { n: r.dist.toFixed(2) }) : "—"}</td>
+    <td><button type="button" class="btn ${on ? "watch-on" : ""}" aria-pressed="${on}" onclick="toggleWatch(${esc(JSON.stringify(num))})">${on ? t("dev.watching") : t("dev.watch")}</button></td>
+  </tr>`;
+}
+function renderDev(){
+  const el = document.getElementById("propDev");
+  if (!el) return;
+  const rows = devFiltered();
+  const all = devState.rows || [];
+  const types = [...new Set(all.map(r => r.PLANWORKCLASS).filter(Boolean))].sort();
+  const stats = [...new Set(all.map(r => r.PLANSTATUS).filter(Boolean))].sort();
+  const watching = watchList.length;
+  el.innerHTML = `<div class="box"><div class="box-hd">${t("dev.h")}</div><div class="box-bd">
+    <p class="lede">${t("dev.lede")}</p>
+    <div class="filterbar">
+      <div class="fgroup"><label for="devRadius">${t("dev.radius")}</label>
+        <select id="devRadius" onchange="setDevRadius(this.value)">
+          ${[0.25, 0.5, 1, 2].map(m => `<option value="${m}"${m === devState.miles ? " selected" : ""}>${t("unit.mi", { n: m })}</option>`).join("")}
+        </select></div>
+      <div class="fgroup"><label for="devType">${t("dev.type")}</label>
+        <select id="devType" onchange="setDevFilter('type',this.value)">
+          <option value="All">${t("dev.all")}</option>
+          ${types.map(x => `<option value="${esc(x)}"${x === devState.type ? " selected" : ""}>${esc(lookupOr("pclass.", x))}</option>`).join("")}
+        </select></div>
+      <div class="fgroup"><label for="devStatus">${t("dev.status")}</label>
+        <select id="devStatus" onchange="setDevFilter('status',this.value)">
+          <option value="All">${t("dev.all")}</option>
+          ${stats.map(x => `<option value="${esc(x)}"${x === devState.status ? " selected" : ""}>${esc(lookupOr("pstatus.", x))}</option>`).join("")}
+        </select></div>
+    </div>
+    <p class="small" aria-live="polite">${rows.length === 1 ? t("dev.count1", { mi: devState.miles }) : t("dev.count", { n: rows.length, mi: devState.miles })}</p>
+    <div class="map-wrap" style="height:300px"><div id="devMap" role="img" aria-label="${esc(t("dev.mapLabel"))}"></div></div>
+    ${rows.length ? `<div class="tablewrap"><table class="itable"><thead><tr>
+        <th scope="col">${t("dev.th.project")}</th><th scope="col">${t("dev.th.type")}</th>
+        <th scope="col">${t("dev.th.status")}</th><th scope="col">${t("dev.th.applied")}</th>
+        <th scope="col">${t("dev.th.dist")}</th><th scope="col">${t("dev.watch")}</th>
+      </tr></thead><tbody>${rows.map(devRow).join("")}</tbody></table></div>`
+      : `<p>${t("dev.none", { mi: devState.miles })}</p>`}
+    ${watching ? `<p class="small">${t("dev.watchCount", { n: watching })}</p>` : ""}
+    <p class="small">${t("dev.watchNote")}</p>
+    <p class="small">${t("dev.src")} ${lang !== "en" ? t("record.verbatim") : ""}</p>
+    <p><a class="btn" href="${OFFICIAL_CALENDAR_URL}" target="_blank" rel="noopener">${t("dev.docs")} &raquo;</a></p>
+  </div></div>`;
+  initDevMap(rows, propCoords);
+}
+async function loadDevelopment(){
+  const el = document.getElementById("propDev");
+  if (!el || !propCoords) return;
+  el.innerHTML = `<p class="small">${t("lookup.loading")}</p>`;
+  try { devState.rows = await fetchNearbyDevelopment(propCoords.lat, propCoords.lon, devState.miles); }
+  catch { devState.rows = []; }
+  renderDev();
 }
 
 function aboutView(){
@@ -1127,6 +1789,7 @@ function render(skipFocus){
     case "home": html=homeView(); break;
     case "ask": html=askView(); break;
     case "property": html=propertyView(); break;
+    case "status": html=statusView(); break;
     case "tools": html=toolsView(); break;
     case "report": html=reportView(); break;
     case "permits": html=permitsView(); break;
@@ -1134,6 +1797,8 @@ function render(skipFocus){
     case "reps": html=repsView(); break;
     case "about": html=aboutView(); break;
   }
+  // Leaving My Property tears down its map so Leaflet doesn't hold a detached node.
+  if(section!=="property" && devMapObj){ devMapObj.remove(); devMapObj=null; }
   el.innerHTML = html;
   if(section==="report") initMap();
   if(skipFocus && activeId){
