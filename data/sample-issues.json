@@ -9,7 +9,7 @@
       "address": "512 Congress St, Portland, ME 04101, USA",
       "lat": 43.65695,
       "lng": -70.25935,
-      "created_at": "2026-07-21T08:12:00-04:00",
+      "created_at": "2026-09-11T08:12:00-04:00",
       "html_url": "https://seeclickfix.com/issues/90000001",
       "request_type": { "id": 101, "title": "Pothole", "organization": "City of Portland" },
       "media": { "representative_image_url": null }
@@ -22,7 +22,7 @@
       "address": "78 Washington Ave, Portland, ME 04101, USA",
       "lat": 43.67285,
       "lng": -70.25520,
-      "created_at": "2026-07-20T21:40:00-04:00",
+      "created_at": "2026-09-10T21:40:00-04:00",
       "html_url": "https://seeclickfix.com/issues/90000002",
       "request_type": { "id": 102, "title": "Street Light", "organization": "City of Portland" },
       "media": { "representative_image_url": null }
@@ -35,7 +35,7 @@
       "address": "20 Monument Sq, Portland, ME 04101, USA",
       "lat": 43.65640,
       "lng": -70.25755,
-      "created_at": "2026-07-20T14:05:00-04:00",
+      "created_at": "2026-09-10T14:05:00-04:00",
       "html_url": "https://seeclickfix.com/issues/90000003",
       "request_type": { "id": 103, "title": "Graffiti", "organization": "City of Portland" },
       "media": { "representative_image_url": null }
@@ -48,7 +48,7 @@
       "address": "155 St John St, Portland, ME 04102, USA",
       "lat": 43.65565,
       "lng": -70.28190,
-      "created_at": "2026-07-19T17:22:00-04:00",
+      "created_at": "2026-09-09T17:22:00-04:00",
       "html_url": "https://seeclickfix.com/issues/90000004",
       "request_type": { "id": 104, "title": "Illegal Dumping", "organization": "City of Portland" },
       "media": { "representative_image_url": null }
@@ -61,7 +61,7 @@
       "address": "The Eastern Promenade, Portland, ME 04101, USA",
       "lat": 43.66575,
       "lng": -70.24430,
-      "created_at": "2026-07-19T09:15:00-04:00",
+      "created_at": "2026-09-09T09:15:00-04:00",
       "html_url": "https://seeclickfix.com/issues/90000005",
       "request_type": { "id": 105, "title": "Traffic Sign", "organization": "City of Portland" },
       "media": { "representative_image_url": null }
@@ -74,7 +74,7 @@
       "address": "340 Forest Ave, Portland, ME 04101, USA",
       "lat": 43.67130,
       "lng": -70.27540,
-      "created_at": "2026-07-18T12:48:00-04:00",
+      "created_at": "2026-09-08T12:48:00-04:00",
       "html_url": "https://seeclickfix.com/issues/90000006",
       "request_type": { "id": 106, "title": "Sidewalk", "organization": "City of Portland" },
       "media": { "representative_image_url": null }
@@ -87,7 +87,7 @@
       "address": "88 Deering Ave, Portland, ME 04102, USA",
       "lat": 43.66480,
       "lng": -70.28090,
-      "created_at": "2026-07-18T07:03:00-04:00",
+      "created_at": "2026-09-08T07:03:00-04:00",
       "html_url": "https://seeclickfix.com/issues/90000007",
       "request_type": { "id": 107, "title": "Tree", "organization": "City of Portland" },
       "media": { "representative_image_url": null }
@@ -100,7 +100,7 @@
       "address": "410 Commercial St, Portland, ME 04101, USA",
       "lat": 43.65370,
       "lng": -70.25060,
-      "created_at": "2026-07-17T15:31:00-04:00",
+      "created_at": "2026-09-07T15:31:00-04:00",
       "html_url": "https://seeclickfix.com/issues/90000008",
       "request_type": { "id": 108, "title": "Storm Drain", "organization": "City of Portland" },
       "media": { "representative_image_url": null }
